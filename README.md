@@ -1,7 +1,8 @@
 # DocentlikPuanHesaplama
  Mart-2024 Kriterlerine Göre Sosyal Bilimler Doçentlik Puanı Hesaplama Aracı
+ https://ezgi.shinyapps.io/DocentlikPuanHesaplama/
 
-Bu hesaplama aracı Mart-2024'te yürürlüğe girecek olan doçentlik kriterlerine göre **YALNIZCA** Sosyal Bilimler alanına yönelik hazırlanmıştır. Diğer alanlar için hesaplayıcı geliştirmek isteyenler bu uygulamanın kaynak kodunu serbestçe kullanabilir. Kaynak kod Theme Customizer'ın altında ve [github](https://github.com/altinisik/DocentlikPuanHesaplama)'da bulunmaktadır. 
+Bu hesaplama aracı Mart-2024'te yürürlüğe girecek olan doçentlik kriterlerine göre **YALNIZCA** Sosyal Bilimler alanına yönelik hazırlanmıştır. Diğer alanlar için hesaplayıcı geliştirmek isteyenler bu uygulamanın kaynak kodunu serbestçe kullanabilir. Kaynak kod Web [arayüzünde](https://ezgi.shinyapps.io/DocentlikPuanHesaplama/) Theme Customizer'ın altında ve [github](https://github.com/altinisik/DocentlikPuanHesaplama)'da bulunmaktadır. 
 Eserlerinizi girerken mutlaka hesaplanan puanı kontrol ediniz. Bu uygulama sadece kişisel kullanım amacıyla yazıldığından ayrıntılı test edilmemiştir. Tespit ettiğiniz hataları iletebilirsiniz. 
 
 #### Kullanım
