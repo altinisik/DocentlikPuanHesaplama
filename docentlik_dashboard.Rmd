@@ -1,0 +1,289 @@
+---
+title: "Mart-2024 Kriterlerine Göre Sosyal Bilimler Doçentlik Puanı Hesaplama Aracı"
+author: "Ezgi Altınışık"
+output: 
+  flexdashboard::flex_dashboard:
+    source_code: embed
+    theme:
+      version: 4
+      bootswatch: minty
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE, context = "server"}
+library(flexdashboard)
+library(tidyverse)
+library(DT)
+bslib::bs_themer()
+```
+
+
+```{r global}
+kategori <- c("1a Q1","1a Q2","1a Q3","1a Q4", "1b", "1c", "1d","1e",
+              "2a","2b","2c",
+              "3a","3b","3c","3d","3e","3f","3g","3h","3ı","3i",
+              "4a","4b","4c","4d",
+              "5a","5b","5c","5d",
+              "6a","6b", "7a i", "7a ii", "7a iii", "7b","7c","7d",
+              "8a","8b","9a","9b","10a","10b","10c","10d",
+              "11a","11b","11c","11d","11e","11f",
+              "12a","12b","12c","13a","13b","13c","13d","13e")
+
+```
+
+```{r}
+downloadButtonRmd <- function (outputId, label = "Download", class = NULL, ...)  {
+     tags$a(id = outputId, class = paste("btn btn-default shiny-download-link", 
+        class), href = "", target = "_blank", download = NA, 
+        icon("download"), label, ...)
+ }
+```
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+```{r}
+selectInput("eser_kodu", "Eser Kodu", choices = kategori)
+textInput("eser_id", "Eser ID")
+selectInput("dods", "Doktora Öncesi/Sonrası", choices = c("Doktora Öncesi", "Doktora Sonrası"))
+uiOutput("cond_elements")
+actionButton("add_data", "Ekle") 
+actionButton("deleteRows", "Seçili Satırı Sil")
+br()
+downloadButtonRmd('download_eser',"Eser Listesini İndir")
+br()
+downloadButtonRmd('download_hesap',"Hesap Tablosunu İndir")
+br()
+verbatimTextOutput("total")
+
+puanlar <- c(30,20,15,10,20,10,5,3,10,4,2,20,10,5,8,20,10,3,2,3,2,
+             20,10,5,3,3,2,2,1,5,3,15,10,5,10,5,3,5,3,1,1,20,10,5,
+             2,25,25,25,15,5,3,2,1,1,5,5,5,5,5)
+names(puanlar) <- kategori
+  
+make_menu <- reactive({
+  if (input$eser_kodu %in% c('1a Q1','1a Q2','1a Q3','1a Q4', 
+                             '1b', '1c', '1d','1e','2a','2b','2c',
+                             '3a','3b','3c','3d','3e','3f','3g','3h','3ı','3i',
+                             '4a','4b','4c','4d',"8a","8b","10a","10b","10c","10d")){
+    numericInput("yazar_sayisi", "Yazar Sayısı", 1)
+  } else if(input$eser_kodu %in% c("5a","5b","5c","5d")) {
+    numericInput("atif_sayisi", "Atıf Sayısı", 1)
+  } else if(input$eser_kodu %in% c("6a","6b")){
+    selectInput("danisman", "Hangi Danışman", 
+                choices = c("Asıl Danışman", "Eş/İkinci Danışman"))
+  } else if(input$eser_kodu %in% c("9a","9b")){
+    list(numericInput("ogretim", "Kaç Dönem", 1),
+         checkboxInput("saglama", "Doktora unvanının alınmasından sonra, yükseköğretim kurumlarında en az 2 yıl kadrolu öğretim elemanı olarak görev yaptım.",value = FALSE))
+  } 
+})
+
+output$cond_elements <- renderUI({make_menu()})
+
+##boş tablo
+xyTable <- reactiveVal(
+  tibble(Eser_Kodu = character(), Eser_ID = character(), Doktora = character(), Yazar_Sayısı = integer(), Puan = numeric())
+)
+
+##satır ekleme
+observeEvent(input$add_data, {
+  if (input$eser_kodu %in% c('1a Q1','1a Q2','1a Q3','1a Q4', 
+                             '1b', '1c', '1d','1e','2a','2b','2c',
+                             '3a','3b','3c','3d','3e','3f','3g','3h','3ı','3i',
+                             '4a','4b','4c','4d',"8a","8b","10a","10b","10c","10d")) {
+    xyTable() %>%
+      add_row(
+        Eser_Kodu = input$eser_kodu,
+        Eser_ID = input$eser_id,
+        Doktora = input$dods,
+        Yazar_Sayısı = input$yazar_sayisi,
+        Puan = puanlar[input$eser_kodu]/input$yazar_sayisi
+      ) %>%
+      xyTable()
+  } else if(input$eser_kodu %in% c("5a","5b","5c","5d")) {
+    xyTable() %>%
+      add_row(
+        Eser_Kodu = input$eser_kodu,
+        Eser_ID = input$eser_id,
+        Doktora = input$dods,
+        Yazar_Sayısı = input$atif_sayisi,
+        Puan = puanlar[input$eser_kodu]*input$atif_sayisi
+      ) %>%
+      xyTable()
+  } else if(input$eser_kodu %in% c("6a","6b")) {
+    if (input$danisman == "Asıl Danışman") {
+      xyTable() %>%
+        add_row(
+          Eser_Kodu = input$eser_kodu,
+          Eser_ID = input$eser_id,
+          Doktora = input$dods,
+          Yazar_Sayısı = 1,
+          Puan = puanlar[input$eser_kodu]
+        ) %>%
+        xyTable()
+    } else {
+      xyTable() %>%
+        add_row(
+          Eser_Kodu = input$eser_kodu,
+          Eser_ID = input$eser_id,
+          Doktora = input$dods,
+          Yazar_Sayısı = 2,
+          Puan = puanlar[input$eser_kodu]/2
+        ) %>%
+        xyTable()
+    }
+  } else if(input$eser_kodu %in% c("9a","9b")) {
+    artipuan = 0
+    if (input$saglama) {
+      artipuan = 2
+    }
+    xyTable() %>%
+      add_row(
+        Eser_Kodu = input$eser_kodu,
+        Eser_ID = input$eser_id,
+        Doktora = input$dods,
+        Yazar_Sayısı = input$ogretim,
+        Puan = floor(input$ogretim/4) + artipuan
+      ) %>%
+      xyTable()
+  } else {
+    xyTable() %>%
+      add_row(
+        Eser_Kodu = input$eser_kodu,
+        Eser_ID = input$eser_id,
+        Doktora = input$dods,
+        Yazar_Sayısı = 1,
+        Puan = puanlar[input$eser_kodu]
+      ) %>%
+      xyTable()
+  }
+  
+})
+
+
+##satır silme
+
+observeEvent(input$deleteRows,{
+  df <- xyTable()
+  if (!is.null(input$xy_Table_rows_selected)) {
+    df <- df[-as.numeric(input$xy_Table_rows_selected),]
+  }
+  xyTable(df)
+})
+
+output$xy_Table <- DT::renderDT(DT::datatable(xyTable(),options = list(pageLength = 15)),editable = T)
+
+##toplam puan hesabı
+
+kat_list <- list()
+for (i in 1:13){
+  kat_list[[i]] <- grep(paste0("^",i,"[a-z+]"), kategori, value=TRUE)
+}
+
+puan_do <- reactive({
+  puan <- rep(0,length(kat_list))
+  for (i in 1:length(kat_list)){
+    filt_dat <- xyTable() %>% 
+      filter(Eser_Kodu %in% kat_list[[i]], Doktora == "Doktora Öncesi")
+    if (length(filt_dat$Puan)>0){
+      puan[i] <- sum(filt_dat$Puan)
+    }
+  }
+  return(puan)
+})
+
+puan_ds <- reactive({
+  puan <- rep(0,length(kat_list))
+  for (i in 1:length(kat_list)){
+    filt_dat <- xyTable() %>% 
+      filter(Eser_Kodu %in% kat_list[[i]], Doktora == "Doktora Sonrası")
+    if (length(filt_dat$Puan)>0){
+      puan[i] <- sum(filt_dat$Puan)
+    }
+  }
+  return(puan)
+})
+
+
+
+##toplam hesap tablosu
+
+toplam_hesap <- reactive({
+  tibble(Kategori = as.character(1:13), 
+         Doktora_Oncesi = puan_do(),
+         Doktora_Sonrası = puan_ds()) %>% 
+    bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Toplam")) %>% 
+    mutate(Ham_Puan = Doktora_Oncesi + Doktora_Sonrası,
+           Net_Puan = case_when(Doktora_Oncesi > 10 ~ 10 + Doktora_Sonrası,
+                                Kategori %in% c("3","4","7","13") 
+                                & Ham_Puan > 20 ~ 20,
+                                Kategori %in% c("5","6","8") 
+                                & Ham_Puan > 10 ~ 10,
+                                Kategori %in% c("9") 
+                                & Ham_Puan > 6 ~ 6,
+                                Kategori %in% c("11")
+                                & Ham_Puan > 25 ~ 25,
+                                Kategori %in% c("12") 
+                                & Ham_Puan > 4 ~ 4,
+                                Kategori %in% c("Toplam") 
+                                & Doktora_Oncesi > 10 ~ 10 + Doktora_Sonrası,
+                                T ~ Ham_Puan)) 
+})
+
+output$hesap <- DT::renderDT(DT::datatable(toplam_hesap(),options = list(pageLength = 15)))
+
+
+output$total <- renderText(paste0("Toplam Puanınız: ", 
+                                  filter(toplam_hesap(), 
+                                         Kategori == "Toplam")$Net_Puan))
+
+output$download_hesap <- downloadHandler(
+  filename = function(){"hesap_tablosu.xlsx"}, 
+  content = function(fname){
+    openxlsx::write.xlsx(toplam_hesap(), fname)
+  })
+
+output$download_eser <- downloadHandler(
+  filename = function(){"eser_tablosu.xlsx"}, 
+  content = function(fname){
+    openxlsx::write.xlsx(xyTable(), fname)
+  })
+```
+
+
+
+Row {data-width=650 .tabset}
+-----------------------------------------------------------------------
+
+### Eser Listesi
+
+```{r}
+DT::DTOutput("xy_Table")
+```
+
+### Hesap Tablosu
+
+```{r}
+DT::DTOutput("hesap")
+```
+
+### Açıklama
+
+Bu hesaplama aracı Mart-2024'te yürürlüğe girecek olan doçentlik kriterlerine göre **YALNIZCA** Sosyal Bilimler alanına yönelik hazırlanmıştır. Diğer alanlar için hesaplayıcı geliştirmek isteyenler bu uygulamanın kaynak kodunu serbestçe kullanabilir. Kaynak kod Theme Customizer'ın altında ve github'da bulunmaktadır. 
+Eserlerinizi girerken mutlaka hesaplanan puanı kontrol ediniz. Bu uygulama sadece kişisel kullanım amacıyla yazıldığından ayrıntılı test edilmemiştir. Tespit ettiğiniz hataları iletebilirsiniz. 
+
+#### Kullanım
+
+- **Eser Kodu**'nu ÜAK'ın dokümanında bulunan numaralandırmaya göre girmelisiniz. 
+- **Eser ID** olarak istediğiniz veriyi girebilir ya da boş bırakabilirsiniz. Tabloları indirip daha sonra kullanmak üzere saklamak isterseniz  **Eser ID** hangi eserleri puanlandırdığınız konusunda yardımcı olacaktır. 
+- Gereken bilgileri girdikten sonra *Ekle* butonuna basarsanız eseriniz hesaplamaya dahil edilecektir. 
+- **Eser Listesi** tablosu siz veri girdikçe dolacaktır. Çıkarmak istediğiniz kayıtların üzerine tıkladıktan sonra sol bardaki *Seçili satırı sil* butonuna basarsanız eser listeden çıkarılacaktır. 
+- Eserlerinizin tamamını girdikten sonra *Hesap Tablosu* sekmesine tıklayarak puanlarınızı kategoriler halinde görebilirsiniz. Sol bardaki ***Toplam puanınız*** bilgisi de her girdiden sonra güncellenecektir. 
+- Bütün eserlerinizi girdiğinizde *Eser Listesini İndir* ya da *Hesap Tablosunu İndir* butonlarını kullanarak tabloları excel formatında indirebilirsiniz. 
+- shinyapps.io'nun ücretsiz sürümünü kullanıdığımdan çoğu zaman çökme yaşanması olasıdır. Eğer kaynak kodu github'dan indirip, kendi bilgisayarınızda açarsanız sıkıntı yaşamadan kullanabilirsiniz. 
+
+Güncellenen kriterlerin ayrıntıları Üniversiteler Arası Kurulun sitesinde bulunmaktadır. [Şuradan](https://www.uak.gov.tr/Sayfalar/DuyuruDetay.aspx?did=174) erişebilirsiniz. 
+
+
+
