@@ -31,6 +31,29 @@ kategori <- c("1a Q1","1a Q2","1a Q3","1a Q4", "1b", "1c", "1d","1e",
               "11a","11b","11c","11d","11e","11f",
               "12a","12b","12c","13a","13b","13c","13d","13e")
 
+kat_labs <- c("1a. Uluslararası Makale-SCIE/SSCI Q1","1a. Uluslararası Makale-SCIE/SSCI Q2","1a. Uluslararası Makale-SCIE/SSCI Q3",
+              "1a. Uluslararası Makale-SCIE/SSCI Q4","1b. Uluslararası Makale-AHCI","1c. Uluslararası Makale-ESCI/SCOPUS",
+              "1d. Uluslararası Makale-Diğer","1e. Uluslararası Makale-Editore Mektup","2a. Ulusal Makale-TR Dizin",
+              "2b. Ulusal Makale-Diğer","2c. Ulusal Makale-Editore Mektup","3a. Lisansüstü Tezlerden Üretilmiş Yayın-SCIE/SSCI/AHCI",
+              "3b. Lisansüstü Tezlerden Üretilmiş Yayın-ESCI/SCOPUS","3c. Lisansüstü Tezlerden Üretilmiş Yayın-Diğer Uluslararası",
+              "3d. Lisansüstü Tezlerden Üretilmiş Yayın-TR Dizin","3e. Lisansüstü Tezlerden Üretilmiş Yayın-BKCI Kitap",
+              "3f. Lisansüstü Tezlerden Üretilmiş Yayın-BKCI Kitap Bölümü","3g. Lisansüstü Tezlerden Üretilmiş Yayın-BKCI Kitap",
+              "3h. Lisansüstü Tezlerden Üretilmiş Yayın-Diğer Kitap Bölümü","3ı. Lisansüstü Tezlerden Üretilmiş Yayın-CPCI Bildiri",
+              "3i. Lisansüstü Tezlerden Üretilmiş Yayın-Diğer Bildiri", "4a. Kitap-BKCI Kitap","4b. Kitap-BKCI Kitap Bölümü",
+              "4c. Kitap-Diğer Kitap","4d. Kitap-Diğer Kitap Bölümü","5a. Atıf-SCIE/SSCI/AHCI/ESCI/SCOPUS","5b. Atıf-BKCI",
+              "5c. Atıf-TR Dizin","5d. Atıf-Diğer","6a. Lisansüstü Tez Danışmanlığı-Doktora","6b. Lisansüstü Tez Danışmanlığı-YL",
+              "7a. Bilimsel Araştırma Projesi-AB/TÜBİTAK Yürütücü","7a. Bilimsel Araştırma Projesi-AB/TÜBİTAK Araştırmacı",
+              "7a. Bilimsel Araştırma Projesi-AB/TÜBİTAK Danışman","7b. Bilimsel Araştırma Projesi-Diğer Uluslararası",
+              "7c. Bilimsel Araştırma Projesi-Diğer Kamu/Özel","7d. Bilimsel Araştırma Projesi-BAP","8a. Bilimsel Toplantı-CPCI",
+              "8b. Bilimsel Toplantı-Diğer","9a. Eğitim-Öğretim-Dönemlik","9b. Eğitim-Öğretim-Yıllık",
+              "10a. Patent/Faydalı Model-Uluslararası Patent","10b. Patent/Faydalı Model-Ulusal Patent",
+              "10c. Patent/Faydalı Model-Model","10d. Patent/Faydalı Model-Kişisel Patent Başvurusu","11a. Ödül-YÖK Yılın Doktora Tezi",
+              "11b. Ödül-YÖK Üstün Başarı","11c. Ödül-TÜBİTAK Bilim","11d. Ödül-TÜBİTAK Teşvik","11e. Ödül-TÜBA GEBİP","11f. Ödül-TÜBA TESEP",
+              "12a. Editörlük-Dergi SCIE/SSCI/AHCI/ESCI/SCOPUS","12b. Editörlük-Kitap BKCI/SCOPUS","12c. Editörlük-Dergi TR Dizin",
+              "13a. Diğer-h-index", "13b. Diğer-Yurtdışı Araştırma", "13c. Diğer-Film Festivali", "13d. Diğer-Film Yönetmenliği",
+              "13e. Diğer-Dizi/Belgesel/Reklam filmi vs")
+names(kategori) = kat_labs
+
 ```
 
 ```{r}
@@ -44,9 +67,9 @@ downloadButtonRmd <- function (outputId, label = "Download", class = NULL, ...) 
 Inputs {.sidebar}
 -----------------------------------------------------------------------
 ```{r}
-selectInput("eser_kodu", "Eser Kodu", choices = kategori)
+selectInput("eser_kodu", "Eser Kodu", choices = kategori,selected = NULL)
 textInput("eser_id", "Eser ID")
-selectInput("dods", "Doktora Öncesi/Sonrası", choices = c("Doktora Öncesi", "Doktora Sonrası"))
+selectInput("dods", "Doktora Öncesi/Sonrası", choices = c("Doktora Öncesi", "Doktora Sonrası"),selected = NULL)
 uiOutput("cond_elements")
 actionButton("add_data", "Ekle") 
 actionButton("deleteRows", "Seçili Satırı Sil")
@@ -56,6 +79,7 @@ br()
 downloadButtonRmd('download_hesap',"Hesap Tablosunu İndir")
 br()
 verbatimTextOutput("total")
+fileInput("file1", "Daha önce indirdiğiniz Excel Dosyasını Yükleyebilirsiniz.", accept = ".xlsx")
 
 puanlar <- c(30,20,15,10,20,10,5,3,10,4,2,20,10,5,8,20,10,3,2,3,2,
              20,10,5,3,3,2,2,1,5,3,15,10,5,10,5,3,5,3,1,1,20,10,5,
@@ -84,7 +108,17 @@ output$cond_elements <- renderUI({make_menu()})
 ##boş tablo
 xyTable <- reactiveVal(
   tibble(Eser_Kodu = character(), Eser_ID = character(), Doktora = character(), Yazar_Sayısı = integer(), Puan = numeric())
-)
+  )
+
+observe({
+  req(input$file1)
+  file <- input$file1
+  df <- openxlsx::read.xlsx(input$file1$datapath, colNames = T)
+  colnames(df) <- c("Eser_Kodu", "Eser_ID", "Doktora", "Yazar_Sayısı", "Puan")
+  df$Puan <- round(df$Puan, 2)
+  xyTable(df)
+})
+
 
 ##satır ekleme
 observeEvent(input$add_data, {
@@ -94,42 +128,42 @@ observeEvent(input$add_data, {
                              '4a','4b','4c','4d',"8a","8b","10a","10b","10c","10d")) {
     xyTable() %>%
       add_row(
-        Eser_Kodu = input$eser_kodu,
+        Eser_Kodu = names(kategori)[kategori == input$eser_kodu],
         Eser_ID = input$eser_id,
         Doktora = input$dods,
         Yazar_Sayısı = input$yazar_sayisi,
-        Puan = puanlar[input$eser_kodu]/input$yazar_sayisi
+        Puan = round(puanlar[input$eser_kodu]/input$yazar_sayisi,2)
       ) %>%
       xyTable()
   } else if(input$eser_kodu %in% c("5a","5b","5c","5d")) {
     xyTable() %>%
       add_row(
-        Eser_Kodu = input$eser_kodu,
+        Eser_Kodu = names(kategori)[kategori == input$eser_kodu],
         Eser_ID = input$eser_id,
         Doktora = input$dods,
         Yazar_Sayısı = input$atif_sayisi,
-        Puan = puanlar[input$eser_kodu]*input$atif_sayisi
+        Puan = round(puanlar[input$eser_kodu]*input$atif_sayisi,2)
       ) %>%
       xyTable()
   } else if(input$eser_kodu %in% c("6a","6b")) {
     if (input$danisman == "Asıl Danışman") {
       xyTable() %>%
         add_row(
-          Eser_Kodu = input$eser_kodu,
+          Eser_Kodu = names(kategori)[kategori == input$eser_kodu],
           Eser_ID = input$eser_id,
           Doktora = input$dods,
           Yazar_Sayısı = 1,
-          Puan = puanlar[input$eser_kodu]
+          Puan = round(puanlar[input$eser_kodu],2)
         ) %>%
         xyTable()
     } else {
       xyTable() %>%
         add_row(
-          Eser_Kodu = input$eser_kodu,
+          Eser_Kodu = names(kategori)[kategori == input$eser_kodu],
           Eser_ID = input$eser_id,
           Doktora = input$dods,
           Yazar_Sayısı = 2,
-          Puan = puanlar[input$eser_kodu]/2
+          Puan = round(puanlar[input$eser_kodu]/2,2)
         ) %>%
         xyTable()
     }
@@ -140,21 +174,21 @@ observeEvent(input$add_data, {
     }
     xyTable() %>%
       add_row(
-        Eser_Kodu = input$eser_kodu,
+        Eser_Kodu = names(kategori)[kategori == input$eser_kodu],
         Eser_ID = input$eser_id,
         Doktora = input$dods,
         Yazar_Sayısı = input$ogretim,
-        Puan = floor(input$ogretim/4) + artipuan
+        Puan = round(floor(input$ogretim/4) + artipuan,2)
       ) %>%
       xyTable()
   } else {
     xyTable() %>%
       add_row(
-        Eser_Kodu = input$eser_kodu,
+        Eser_Kodu = names(kategori)[kategori == input$eser_kodu],
         Eser_ID = input$eser_id,
         Doktora = input$dods,
         Yazar_Sayısı = 1,
-        Puan = puanlar[input$eser_kodu]
+        Puan = round(puanlar[input$eser_kodu])
       ) %>%
       xyTable()
   }
@@ -172,22 +206,32 @@ observeEvent(input$deleteRows,{
   xyTable(df)
 })
 
-output$xy_Table <- DT::renderDT(DT::datatable(xyTable(),options = list(pageLength = 15)),editable = T)
+xyTable_col <- reactive({
+  df <- xyTable()
+  colnames(df) <- c("Eser Kodu","Eser ID", "Doktora", "Yazar/Atıf/Faaliyet Sayısı", "Puan")
+  df
+})
+
+output$xy_Table <- DT::renderDT(DT::datatable(xyTable_col(),options = list(pageLength = 15)),editable = T)
 
 ##toplam puan hesabı
 
+katlist_labs <- c("1. Uluslararası Makale","2. Ulusal Makale","3. Lisansüstü Tezlerden Üretilmiş Yayın", "4. Kitap","5. Atıf",
+                  "6. Lisansüstü Tez Danışmanlığı","7. Bilimsel Araştırma Projesi","8. Bilimsel Toplantı","9. Eğitim-Öğretim",
+                  "10. Patent/Faydalı Model","11. Ödül","12. Editörlük","13. Diğer")
 kat_list <- list()
-for (i in 1:13){
-  kat_list[[i]] <- grep(paste0("^",i,"[a-z+]"), kategori, value=TRUE)
+for (i in 1:length(katlist_labs)){
+  kat_list[[katlist_labs[i]]] <- grep(paste0("^",i,"[a-z+]"), kategori, value=TRUE)
 }
+
 
 puan_do <- reactive({
   puan <- rep(0,length(kat_list))
   for (i in 1:length(kat_list)){
     filt_dat <- xyTable() %>% 
-      filter(Eser_Kodu %in% kat_list[[i]], Doktora == "Doktora Öncesi")
+      filter(Eser_Kodu %in% names(kat_list[[katlist_labs[i]]]), Doktora == "Doktora Öncesi")
     if (length(filt_dat$Puan)>0){
-      puan[i] <- sum(filt_dat$Puan)
+      puan[i] <- round(sum(filt_dat$Puan),2)
     }
   }
   return(puan)
@@ -197,9 +241,9 @@ puan_ds <- reactive({
   puan <- rep(0,length(kat_list))
   for (i in 1:length(kat_list)){
     filt_dat <- xyTable() %>% 
-      filter(Eser_Kodu %in% kat_list[[i]], Doktora == "Doktora Sonrası")
+      filter(Eser_Kodu %in% names(kat_list[[katlist_labs[i]]]), Doktora == "Doktora Sonrası")
     if (length(filt_dat$Puan)>0){
-      puan[i] <- sum(filt_dat$Puan)
+      puan[i] <- round(sum(filt_dat$Puan),2)
     }
   }
   return(puan)
@@ -209,26 +253,44 @@ puan_ds <- reactive({
 
 ##toplam hesap tablosu
 
-toplam_hesap <- reactive({
-  tibble(Kategori = as.character(1:13), 
+toplam_hesap_pre <- reactive({
+  tibble(Kategori = katlist_labs, 
          Doktora_Oncesi = puan_do(),
          Doktora_Sonrası = puan_ds()) %>% 
-    bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Toplam")) %>% 
     mutate(Ham_Puan = Doktora_Oncesi + Doktora_Sonrası,
-           Net_Puan = case_when(Doktora_Oncesi > 10 ~ 10 + Doktora_Sonrası,
-                                Kategori %in% c("3","4","7","13") 
+           DS_Net = case_when(Kategori %in% c(katlist_labs[3],katlist_labs[4],katlist_labs[7],katlist_labs[13]) 
+                              & Doktora_Sonrası > 20 ~ 20,
+                              Kategori %in% c(katlist_labs[5],katlist_labs[6],katlist_labs[8]) 
+                              & Doktora_Sonrası > 10 ~ 10,
+                              Kategori %in% c(katlist_labs[9]) 
+                              & Doktora_Sonrası > 6 ~ 6,
+                              Kategori %in% c(katlist_labs[11])
+                              & Doktora_Sonrası > 25 ~ 25,
+                              Kategori %in% c(katlist_labs[12]) 
+                              & Doktora_Sonrası > 4 ~ 4,
+                              T ~ Doktora_Sonrası)) %>% 
+    bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Toplam")) %>% 
+    mutate(Net_Puan = case_when(Kategori %in% c(katlist_labs[3],katlist_labs[4],katlist_labs[7],katlist_labs[13]) 
                                 & Ham_Puan > 20 ~ 20,
-                                Kategori %in% c("5","6","8") 
+                                Kategori %in% c(katlist_labs[5],katlist_labs[6],katlist_labs[8]) 
                                 & Ham_Puan > 10 ~ 10,
-                                Kategori %in% c("9") 
+                                Kategori %in% c(katlist_labs[9]) 
                                 & Ham_Puan > 6 ~ 6,
-                                Kategori %in% c("11")
+                                Kategori %in% c(katlist_labs[11])
                                 & Ham_Puan > 25 ~ 25,
-                                Kategori %in% c("12") 
+                                Kategori %in% c(katlist_labs[12]) 
                                 & Ham_Puan > 4 ~ 4,
-                                Kategori %in% c("Toplam") 
-                                & Doktora_Oncesi > 10 ~ 10 + Doktora_Sonrası,
-                                T ~ Ham_Puan)) 
+                                Kategori == "Toplam"
+                                & Doktora_Oncesi > 10 ~ 10 + DS_Net,
+                                T ~ Ham_Puan)) %>% 
+    dplyr::select(-DS_Net)
+})
+
+
+toplam_hesap <- reactive({
+  df <- toplam_hesap_pre()
+  colnames(df) <- c("Kategori","Doktora Öncesi", "Doktora Sonrası", "Ham Puan", "Net Puan")
+  df
 })
 
 output$hesap <- DT::renderDT(DT::datatable(toplam_hesap(),options = list(pageLength = 15)))
@@ -236,7 +298,7 @@ output$hesap <- DT::renderDT(DT::datatable(toplam_hesap(),options = list(pageLen
 
 output$total <- renderText(paste0("Toplam Puanınız: ", 
                                   filter(toplam_hesap(), 
-                                         Kategori == "Toplam")$Net_Puan))
+                                         Kategori == "Toplam")$`Net Puan`))
 
 output$download_hesap <- downloadHandler(
   filename = function(){"hesap_tablosu.xlsx"}, 
@@ -271,7 +333,7 @@ DT::DTOutput("hesap")
 ### Açıklama
 
 Bu hesaplama aracı Mart-2024'te yürürlüğe girecek olan doçentlik kriterlerine göre **YALNIZCA** Sosyal Bilimler alanına yönelik hazırlanmıştır. Diğer alanlar için hesaplayıcı geliştirmek isteyenler bu uygulamanın kaynak kodunu serbestçe kullanabilir. Kaynak kod Theme Customizer'ın altında ve [github](https://github.com/altinisik/DocentlikPuanHesaplama)'da bulunmaktadır. 
-Eserlerinizi girerken mutlaka hesaplanan puanı kontrol ediniz. Bu uygulama sadece kişisel kullanım amacıyla yazıldığından ayrıntılı test edilmemiştir. Tespit ettiğiniz hataları iletebilirsiniz. 
+Eserlerinizi girerken mutlaka hesaplanan puanı kontrol ediniz. Bu uygulama sadece kişisel kullanım amacıyla yazıldığından ayrıntılı test edilmemiştir. Tespit ettiğiniz hataları iletebilirsiniz. Eski versiyonda bulunan puanlama hatası giderilmiştir.
 
 #### Kullanım
 
@@ -281,9 +343,8 @@ Eserlerinizi girerken mutlaka hesaplanan puanı kontrol ediniz. Bu uygulama sade
 - **Eser Listesi** tablosu siz veri girdikçe dolacaktır. Çıkarmak istediğiniz kayıtların üzerine tıkladıktan sonra sol bardaki *Seçili satırı sil* butonuna basarsanız eser listeden çıkarılacaktır. 
 - Eserlerinizin tamamını girdikten sonra *Hesap Tablosu* sekmesine tıklayarak puanlarınızı kategoriler halinde görebilirsiniz. Sol bardaki ***Toplam puanınız*** bilgisi de her girdiden sonra güncellenecektir. 
 - Bütün eserlerinizi girdiğinizde *Eser Listesini İndir* ya da *Hesap Tablosunu İndir* butonlarını kullanarak tabloları excel formatında indirebilirsiniz. 
+- Daha önce girdiğiniz bilgileri tekrar kullanmak isterseniz *Eser Listesi* dosyasını yükleyip, ardından yeni yayınlarınızı ekleyebilir, güncel versiyonunu tekrar indirebilirsiniz. 
 - shinyapps.io'nun ücretsiz sürümünü kullanıdığımdan çoğu zaman çökme yaşanması olasıdır. Eğer kaynak kodu github'dan indirip, kendi bilgisayarınızda açarsanız sıkıntı yaşamadan kullanabilirsiniz. 
+- Girdiğiniz bilgiler hiçbir aşamada sunuculara kaydedilmemektedir. Tarayıcıyı kapattığınızda tüm bilgiler kaybolacaktır. 
 
 Güncellenen kriterlerin ayrıntıları Üniversiteler Arası Kurulun sitesinde bulunmaktadır. [Şuradan](https://www.uak.gov.tr/Sayfalar/DuyuruDetay.aspx?did=174) erişebilirsiniz. 
-
-
-
