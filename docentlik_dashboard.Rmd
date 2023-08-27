@@ -82,8 +82,8 @@ verbatimTextOutput("total")
 fileInput("file1", "Daha önce indirdiğiniz Excel Dosyasını Yükleyebilirsiniz.", accept = ".xlsx")
 
 puanlar <- c(30,20,15,10,20,10,5,3,10,4,2,20,10,5,8,20,10,3,2,3,2,
-             20,10,5,3,3,2,2,1,5,3,15,10,5,10,5,3,5,3,1,1,20,10,5,
-             2,25,25,25,15,5,3,2,1,1,5,5,5,5,5)
+             20,10,5,3,3,2,2,1,5,3,15,10,5,10,5,3,5,3,2,2,20,10,5,
+             2,25,25,25,25,25,25,2,1,1,5,5,5,5,5)
 names(puanlar) <- kategori
   
 make_menu <- reactive({
@@ -178,7 +178,7 @@ observeEvent(input$add_data, {
         Eser_ID = input$eser_id,
         Doktora = input$dods,
         Yazar_Sayısı = input$ogretim,
-        Puan = round(floor(input$ogretim/4) + artipuan,2)
+        Puan = round(floor(input$ogretim/4)*2 + artipuan,2)
       ) %>%
       xyTable()
   } else {
@@ -212,7 +212,7 @@ xyTable_col <- reactive({
   df
 })
 
-output$xy_Table <- DT::renderDT(DT::datatable(xyTable_col(),options = list(pageLength = 15)),editable = T)
+output$xy_Table <- DT::renderDT(DT::datatable(xyTable_col(),options = list(pageLength = 100)),editable = T)
 
 ##toplam puan hesabı
 
@@ -293,7 +293,7 @@ toplam_hesap <- reactive({
   df
 })
 
-output$hesap <- DT::renderDT(DT::datatable(toplam_hesap(),options = list(pageLength = 15)))
+output$hesap <- DT::renderDT(DT::datatable(toplam_hesap(),options = list(pageLength = 100)))
 
 
 output$total <- renderText(paste0("Toplam Puanınız: ", 
@@ -333,7 +333,7 @@ DT::DTOutput("hesap")
 ### Açıklama
 
 Bu hesaplama aracı Mart-2024'te yürürlüğe girecek olan doçentlik kriterlerine göre **YALNIZCA** Sosyal Bilimler alanına yönelik hazırlanmıştır. Diğer alanlar için hesaplayıcı geliştirmek isteyenler bu uygulamanın kaynak kodunu serbestçe kullanabilir. Kaynak kod Theme Customizer'ın altında ve [github](https://github.com/altinisik/DocentlikPuanHesaplama)'da bulunmaktadır. 
-Eserlerinizi girerken mutlaka hesaplanan puanı kontrol ediniz. Bu uygulama sadece kişisel kullanım amacıyla yazıldığından ayrıntılı test edilmemiştir. Tespit ettiğiniz hataları iletebilirsiniz. Eski versiyonda bulunan puanlama hatası giderilmiştir.
+Eserlerinizi girerken mutlaka hesaplanan puanı kontrol ediniz. Bu uygulama sadece kişisel kullanım amacıyla yazıldığından ayrıntılı test edilmemiştir. Tespit ettiğiniz hataları iletebilirsiniz. Eski versiyonda bulunan puanlama hatası giderilmiştir. **24.08.2023 tarihinde YÖK Genel Kurulu tarafından açıklanan yeni [kararlar](https://www.uak.gov.tr/DuyuruBelgeleri/2023/8/YOKGK_24082023.pdf) eklenmiştir.**
 
 #### Kullanım
 

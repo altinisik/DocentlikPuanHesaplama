@@ -3,7 +3,7 @@
  https://ezgi.shinyapps.io/DocentlikPuanHesaplama/
 
 Bu hesaplama aracı Mart-2024'te yürürlüğe girecek olan doçentlik kriterlerine göre **YALNIZCA** Sosyal Bilimler alanına yönelik hazırlanmıştır. Diğer alanlar için hesaplayıcı geliştirmek isteyenler bu uygulamanın kaynak kodunu serbestçe kullanabilir. Kaynak kod Web [arayüzünde](https://ezgi.shinyapps.io/DocentlikPuanHesaplama/) Theme Customizer'ın altında ve [github](https://github.com/altinisik/DocentlikPuanHesaplama)'da bulunmaktadır. 
-Eserlerinizi girerken mutlaka hesaplanan puanı kontrol ediniz. Bu uygulama sadece kişisel kullanım amacıyla yazıldığından ayrıntılı test edilmemiştir. Tespit ettiğiniz hataları iletebilirsiniz. Eski versiyonda bulunan puanlama hatası giderilmiştir.
+Eserlerinizi girerken mutlaka hesaplanan puanı kontrol ediniz. Bu uygulama sadece kişisel kullanım amacıyla yazıldığından ayrıntılı test edilmemiştir. Tespit ettiğiniz hataları iletebilirsiniz. Eski versiyonda bulunan puanlama hatası giderilmiştir. **24.08.2023 tarihinde YÖK Genel Kurulu tarafından açıklanan yeni [kararlar](https://www.uak.gov.tr/DuyuruBelgeleri/2023/8/YOKGK_24082023.pdf) eklenmiştir.**
 
 #### Kullanım
 
