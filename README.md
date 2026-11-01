@@ -4,7 +4,7 @@
 
 Doçentlik başvurusu için eser ve faaliyetlerinizden aldığınız puanı, madde tavanlarını ve zorunlu koşulları hesaplayan bir araç. Excel şablonunu doldurup yüklemeniz ya da eserlerinizi doğrudan sayfaya girmeniz yeterli. Şu an yalnızca sosyal bilimler alanları için çalışıyor.
 
-👉 **Araca buradan ulaşabilirsiniz:** [https://altinisik.ezgilab.com/DocentlikPuanHesaplama/](https://altinisik.github.io/DocentlikPuanHesaplama/){.uri}
+👉 **Araca buradan ulaşabilirsiniz:** [https://altinisik.ezgilab.com/DocentlikPuanHesaplama/](https://altinisik.github.io/DocentlikPuanHesaplama/)
 
 > Bu araç bilgilendirme amaçlıdır. Resmî değerlendirme ÜAK jürisi tarafından yapılır. Başvurudan önce kriterlerin güncel metnini [uak.gov.tr](https://www.uak.gov.tr) adresinden kontrol edin.
 
