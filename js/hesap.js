@@ -1,18 +1,20 @@
 /*
- * Doçentlik puan hesap motoru (arayüzden bağımsız).
- * Tarayıcıda window.Hesap, Node'da require("./hesap.js") olarak kullanılır.
+ * Doçentlik puan hesap motoru (arayüzden ve temel alandan bağımsız).
+ * Kurallar js/kurallar/ altındaki tablo dosyalarından okunur.
+ * Tarayıcıda window.Hesap, Node'da require("./hesap.js").
  *
  * Girdi:
  *   {
- *     ayarlar: { alan: "Diğer", yabanci: false, kadrolu: false },
- *     eserler: [{ eserId, madde, doktoraSonrasi, yazarSayisi, adet, kaynak, tezKaynakli, not }]
+ *     ayarlar: { tablo: "11", alan, yabanci, kadrolu, once2016 },
+ *     eserler: [{ eserId, madde, doktoraSonrasi, yazarSayisi, yazarlik, adet, kaynak,
+ *                 tezKaynakli, kendisiSundu, not }]
  *   }
- *   doktoraSonrasi / tezKaynakli: true | false | null
  */
 (function (root) {
-  const KURALLAR_VARSAYILAN =
-    typeof module !== "undefined" && module.exports ? require("./kurallar.js") : root.KURALLAR;
-
+  const NODE = typeof module !== "undefined" && module.exports;
+  if (NODE) require("./kurallar/hepsi.js");
+  const Ortak = NODE ? require("./kurallar/ortak.js") : root.DocentlikOrtak;
+  const VARSAYILAN_TABLO = "11";
   const EPS = 1e-9;
 
   // ---------- yardımcılar ----------
@@ -45,11 +47,30 @@
     return null;
   }
 
+  /** Başlıca yazar bilgisi: "baslica" | "diger" | "belirtilmemis" | null */
+  function yazarlikCoz(x) {
+    if (x === "baslica" || x === "diger" || x === "belirtilmemis") return x;
+    const s = ascii(norm(x));
+    if (!s) return null;
+    if (s.includes("belirt") || s === "yok") return "belirtilmemis";
+    if (s.includes("baska") || s.includes("diger") || s === "h" || s === "hayir") return "diger";
+    if (s.includes("benim") || s === "e" || s === "evet" || s.startsWith("baslica")) return "baslica";
+    return null;
+  }
+
+  /** Tablo nesnesi ya da numarası → tablo */
+  function tabloBul(t) {
+    if (t && typeof t === "object" && t.kalemler) return t;
+    const id = String(t ?? VARSAYILAN_TABLO).padStart(2, "0");
+    return Ortak.tablolar[id] || Ortak.tablolar[VARSAYILAN_TABLO];
+  }
+
   /**
-   * Madde hücresini kaleme çevirir. Kabul edilen yazımlar:
+   * Madde hücresini seçili tablonun kalemine çevirir. Kabul edilen yazımlar:
    * "1a-Q1 · SCIE/SSCI ...", "1a Q1", "1aq1", "6a eş danışman", "7a yürütücü", "3ı"
    */
-  function kodCoz(metin, K = KURALLAR_VARSAYILAN) {
+  function kodCoz(metin, tablo) {
+    const T = tabloBul(tablo);
     const ham = String(metin ?? "").trim();
     if (!ham) return { kalem: null, hata: "Madde kodu boş." };
     const kodKismi = ham.split(/\s+[·—–|:]\s*|·/)[0];
@@ -58,8 +79,13 @@
     if (!m) return { kalem: null, hata: `"${ham}" madde kodu olarak okunamadı.` };
     const bent = m[1] + m[2];
     const ek = ascii(m[3]);
-    const adaylar = K.kalemler.filter((k) => k.bent === bent);
-    if (!adaylar.length) return { kalem: null, hata: `"${ham}": ${bent} diye bir bent yok.` };
+    const adaylar = T.kalemler.filter((k) => k.bent === bent);
+    if (!adaylar.length) {
+      const herhangi = Ortak.sirali().some((t) => t.kalemler.some((k) => k.bent === bent));
+      return { kalem: null, hata: herhangi
+        ? `"${ham}": ${bent} bendi Tablo ${T.no} (${T.ad}) kurallarında yok.`
+        : `"${ham}": ${bent} diye bir bent yok.` };
+    }
     if (adaylar.length === 1) return { kalem: adaylar[0] };
 
     let kod = null;
@@ -81,33 +107,60 @@
     return kalem ? { kalem } : { kalem: null, hata: `"${ham}" çözümlenemedi.` };
   }
 
+  /** Başlıca yazar kuralına göre adayın payı */
+  function baslicaPayi(n, rol) {
+    if (n <= 1) return 1;
+    if (rol === "baslica") return n === 2 ? 0.8 : 0.5;
+    if (rol === "diger") return n === 2 ? 0.5 : 0.5 / (n - 1);
+    return 1 / n; // başlıca yazar belirtilmemiş: eşit bölünür
+  }
+
   // ---------- ana hesap ----------
-  function hesapla(girdi, K = KURALLAR_VARSAYILAN) {
-    const ay = Object.assign({ alan: "Diğer", yabanci: false, kadrolu: false }, (girdi && girdi.ayarlar) || {});
+  function hesapla(girdi, tablo) {
+    const ay = Object.assign({ alan: "", yabanci: false, kadrolu: false, once2016: false },
+      (girdi && girdi.ayarlar) || {});
+    const T = tabloBul(tablo ?? ay.tablo);
+    if (T.alanlar && !T.alanlar.secenekler.includes(ay.alan)) ay.alan = T.alanlar.varsayilan;
+    ay.tablo = T.id;
+
     const uyarilar = [];
-    const uyar = (no, mesaj) => uyarilar.push({ satir: no, mesaj });
+    const uyarildi = new Set();
+    const uyar = (no, mesaj) => {
+      const a = `${no}|${mesaj}`;
+      if (uyarildi.has(a)) return;
+      uyarildi.add(a);
+      uyarilar.push({ satir: no, mesaj });
+    };
     const satirlar = [];
 
     // 1) Satır puanları
     ((girdi && girdi.eserler) || []).forEach((e, i) => {
-      const s = { no: i + 1, eser: e, kalem: null, bent: null, bolum: null, ds: false,
-                  puan: 0, sayilan: 0, bolen: null, elendi: false, gecerli: false, notlar: [] };
+      const s = { no: i + 1, eser: e, kalem: null, bent: null, bolum: null, ds: false, puan: 0, sayilan: 0,
+                  yazar: null, bolen: null, baslica: false, elendi: false, gecerli: false, notlar: [] };
       satirlar.push(s);
 
-      const c = kodCoz(e.madde, K);
+      const c = kodCoz(e.madde, T);
       if (!c.kalem) { s.notlar.push(c.hata); uyar(s.no, c.hata); return; }
       const k = c.kalem;
       Object.assign(s, { kalem: k, bent: k.bent, bolum: k.bolum, gecerli: true });
 
       if (e.doktoraSonrasi === true || e.doktoraSonrasi === false) s.ds = e.doktoraSonrasi;
-      else uyar(s.no, "Doktora sonrası (E/H) girilmemiş; doktora öncesi kabul edildi.");
+      else uyar(s.no, `${ilkBuyuk(T.tarihAdi)} sonrası (E/H) girilmemiş; ${T.tarihAdi} öncesi kabul edildi.`);
 
       const adet = sayi(e.adet);
       if (k.tip === "yayin") {
         let n = sayi(e.yazarSayisi);
         if (!(n >= 1)) { n = 1; uyar(s.no, "Yazar/kişi sayısı girilmemiş; 1 kabul edildi."); }
+        const rol = yazarlikCoz(e.yazarlik);
+        s.yazar = n;
         s.bolen = n;
-        s.puan = k.puan / n;
+        s.baslica = n === 1 || rol === "baslica";
+        if (T.bolme === "baslica" && T.baslicaBentleri.includes(k.bent)) {
+          if (n > 1 && rol == null) uyar(s.no, "Başlıca yazar bilgisi girilmemiş; puan yazarlar arasında eşit bölündü.");
+          s.puan = k.puan * baslicaPayi(n, rol);
+        } else {
+          s.puan = k.puan / n;
+        }
       } else if (k.tip === "adet") {
         let a = adet;
         if (!(a >= 0)) { a = 1; uyar(s.no, "Atıf adedi girilmemiş; 1 kabul edildi."); }
@@ -118,7 +171,6 @@
       if ((k.tip === "yayin" || k.tip === "sabit") && adet > 1) {
         uyar(s.no, "Adet sütunu yalnızca atıf (5) ve eğitim-öğretim (9) satırlarında kullanılır; bu satırda dikkate alınmadı. Her eseri ayrı satıra girin.");
       }
-
       if (e.tezKaynakli === true && [1, 2, 4, 8].includes(s.bolum)) {
         uyar(s.no, "Tezden üretildi olarak işaretli. Tezden üretilen yayınlar yalnızca 3. maddede puanlanabilir.");
       }
@@ -127,45 +179,46 @@
       }
     });
 
-    // 2) Bölüm 9: yarıyıl/yıl sayıları toplanır, birim başına puan verilir
+    // 2) 9. madde: yarıyıl/yıl sayıları toplanır, birim başına puan verilir
     let puan9 = 0;
-    for (const bent of ["9a", "9b"]) {
-      const rs = satirlar.filter((s) => s.gecerli && s.bent === bent);
+    for (const k of T.kalemler.filter((k) => k.tip === "ogretim")) {
+      const rs = satirlar.filter((s) => s.gecerli && s.kalem === k);
       if (!rs.length) continue;
-      const k = rs[0].kalem;
       let toplamAdet = 0;
       for (const s of rs) {
         let a = sayi(s.eser.adet);
         if (!(a >= 0)) { a = 1; uyar(s.no, "Adet girilmemiş; 1 kabul edildi."); }
-        if (!s.ds) { s.adet9 = 0; s.notlar.push("Ders verme doktora sonrası olmalı; sayılmadı."); continue; }
+        if (!s.ds) { s.adet9 = 0; s.notlar.push(`Ders verme ${T.tarihAdi} sonrası olmalı; sayılmadı.`); continue; }
         s.adet9 = a;
         toplamAdet += a;
       }
       const p = Math.floor(toplamAdet / k.birim + EPS) * k.puan;
       for (const s of rs) s.puan = toplamAdet ? (p * s.adet9) / toplamAdet : 0;
       const artan = toplamAdet % k.birim;
-      if (artan && rs.length) {
-        const birimAd = bent === "9a" ? "yarıyıl" : "yıl";
-        rs[rs.length - 1].notlar.push(`${bent}: ${artan} ${birimAd} puana dönüşmedi (${k.birim} ${birimAd} = ${k.puan} puan).`);
+      if (artan) {
+        const birimAd = k.birim === 4 ? "yarıyıl" : "yıl";
+        rs[rs.length - 1].notlar.push(`${k.bent}: ${artan} ${birimAd} puana dönüşmedi (${k.birim} ${birimAd} = ${k.puan} puan).`);
       }
       puan9 += p;
     }
     if (ay.kadrolu && puan9 < 2) {
       satirlar.push({
         no: null, sanal: true, gecerli: true, elendi: false, ds: true, bolum: 9, bent: "9",
-        kalem: { kod: "9", bent: "9", ad: "Doktora sonrası en az 2 yıl kadrolu görev: 2 puan almış sayılır" },
+        kalem: { kod: "9", bent: "9", ad: `${ilkBuyuk(T.tarihAdi)} sonrası en az 2 yıl kadrolu görev: 2 puan almış sayılır` },
         eser: { eserId: "Ayarlar: en az 2 yıl kadrolu öğretim elemanı" },
         puan: 2 - puan9, sayilan: 0, notlar: []
       });
       puan9 = 2;
     }
 
-    // 3) Tekilleştirme
-    function tekillestir(filtre, mesaj, eksikMesaj) {
+    // 3) Tekilleştirme (aynı kitap/toplantı)
+    for (const kural of T.tekillestirme) {
       const gruplar = new Map();
-      for (const s of satirlar.filter(filtre)) {
+      const uyan = satirlar.filter((s) => s.gecerli && !s.sanal &&
+        (kural.bentler ? kural.bentler.includes(s.bent) : s.bolum === kural.bolum));
+      for (const s of uyan) {
         const key = norm(s.eser.kaynak);
-        if (!key) { uyar(s.no, eksikMesaj); continue; }
+        if (!key) { uyar(s.no, kural.eksikMesaj); continue; }
         if (!gruplar.has(key)) gruplar.set(key, []);
         gruplar.get(key).push(s);
       }
@@ -174,16 +227,10 @@
         rs.sort((a, b) => b.puan - a.puan || b.ds - a.ds);
         for (const s of rs.slice(1)) {
           s.elendi = true;
-          s.notlar.push(`${mesaj} (${rs[0].no}. satır puanlandı).`);
+          s.notlar.push(`${kural.mesaj} (${rs[0].no}. satır puanlandı).`);
         }
       }
     }
-    tekillestir((s) => s.gecerli && (s.bent === "4b" || s.bent === "4d"),
-      "Aynı kitaptan yalnızca bir bölüm puanlanır",
-      "Kitap adı girilmemiş; aynı kitaptan tek bölüm kuralı kontrol edilemedi.");
-    tekillestir((s) => s.gecerli && s.bolum === 8,
-      "Aynı toplantıdan yalnızca bir çalışma puanlanır",
-      "Toplantı adı girilmemiş; aynı toplantıdan tek çalışma kuralı kontrol edilemedi.");
 
     // 4) Tavanlar — tavan aşılırsa önce doktora sonrası puanlar sayılır (90 şartı için adayın lehine)
     for (const s of satirlar) s.sayilan = s.gecerli && !s.elendi ? s.puan : 0;
@@ -197,102 +244,49 @@
         if (once - s.sayilan > EPS) s.notlar.push(`${mesaj}: ${fmt(once - s.sayilan)} puan sayılmadı.`);
       }
     }
-    for (const at of K.altTavanlar) {
+    for (const at of T.altTavanlar) {
       kirp(satirlar.filter((s) => s.sayilan > 0 && at.bentler.includes(s.bent)), at.tavan,
         `${at.ad} için en fazla ${at.tavan} puan`);
     }
-    for (const [no, b] of Object.entries(K.bolumler)) {
+    for (const [no, b] of Object.entries(T.bolumler)) {
       if (b.tavan == null) continue;
-      kirp(satirlar.filter((s) => s.sayilan > 0 && s.bolum === +no), b.tavan,
-        `${no}. madde tavanı ${b.tavan} puan`);
+      kirp(satirlar.filter((s) => s.sayilan > 0 && s.bolum === +no), b.tavan, `${no}. madde tavanı ${b.tavan} puan`);
     }
 
     // 5) Bölüm özetleri ve toplamlar
-    const bolumler = Object.entries(K.bolumler).map(([no, b]) => {
+    const bolumler = Object.entries(T.bolumler).map(([no, b]) => {
       const rs = satirlar.filter((s) => s.gecerli && s.bolum === +no);
       const ham = toplamla(rs, (s) => s.puan);
       const sayilan = toplamla(rs, (s) => s.sayilan);
       const ds = toplamla(rs.filter((s) => s.ds), (s) => s.sayilan);
       return { no: +no, ad: b.ad, tavan: b.tavan, satirSayisi: rs.length, ham, sayilan,
                ds, do: sayilan - ds, kirpilan: ham - sayilan, doksana: b.doksanaSayilmaz ? 0 : ds };
-    });
+    }).sort((a, b) => a.no - b.no);
     const toplam = toplamla(bolumler, (b) => b.sayilan);
     const doksan = toplamla(bolumler, (b) => b.doksana);
 
     // 6) Zorunlu koşullar
-    const dsGecerli = (s) => s.gecerli && s.ds && !s.elendi && !s.sanal;
-    const bentte = (s, liste) => liste.includes(s.bent);
-    const kosullar = [];
-    const kosul = (o) => kosullar.push(o);
-
-    kosul({ kod: "toplam", ad: "Toplam en az 100 puan", gecti: toplam >= K.esikToplam - EPS,
-            deger: `${fmt(toplam)} / ${K.esikToplam}` });
-    kosul({ kod: "doksan", ad: "Doktora sonrası çalışmalardan en az 90 puan (3. madde hariç)",
-            gecti: doksan >= K.esikDoktoraSonrasi - EPS, deger: `${fmt(doksan)} / ${K.esikDoktoraSonrasi}` });
-
-    const p1 = toplamla(satirlar.filter((s) => dsGecerli(s) && bentte(s, ["1a", "1b", "1c", "1d"])), (s) => s.puan);
-    kosul({ kod: "m1", ad: "1. madde: doktora sonrası a–d bentlerinden en az 10 puan",
-            gecti: p1 >= 10 - EPS, deger: `${fmt(p1)} / 10` });
-
-    // 2. madde
-    function dergiKontrol(rs) {
-      const dergi = (s) => norm(s.eser.kaynak) || `__satir${s.no}`;
-      const tum = new Set(rs.map(dergi));
-      const tek = new Set(rs.filter((s) => s.bolen === 1).map(dergi));
-      return { yayin: rs.length, dergi: tum.size, tekDergi: tek.size, gecti: tek.size >= 3 && tum.size >= 5 };
-    }
-    const tr = satirlar.filter((s) => dsGecerli(s) && s.bent === "2a");
-    tr.filter((s) => !norm(s.eser.kaynak)).forEach((s) =>
-      uyar(s.no, "Dergi adı girilmemiş; 2. maddedeki farklı dergi şartında ayrı dergi kabul edildi."));
-    const d2 = dergiKontrol(tr);
-    const altA = satirlar.filter((s) => dsGecerli(s) && bentte(s, ["1a", "1b"]));
-    const altATek = altA.filter((s) => s.bolen === 1).length;
-    const altAGecti = altA.length >= 3 && altATek >= 1;
-    let yab = null;
-    if (ay.yabanci) yab = dergiKontrol(satirlar.filter((s) => dsGecerli(s) && bentte(s, ["2a", "1a", "1b", "1c"])));
-    let yol = null;
-    if (d2.gecti) yol = "TR Dizin şartı sağlanıyor.";
-    else if (altAGecti) yol = "TR Dizin şartı yerine 1a/1b alternatifi sağlanıyor.";
-    else if (yab && yab.gecti) yol = "Yabancı uyruk/denklik alternatifi (1a/1b/1c ile tamamlama) sağlanıyor.";
-    const ayrinti2 = [
-      `TR Dizin (2a): ${d2.yayin} yayın, ${d2.dergi}/5 farklı dergi, tek yazarlı ${d2.tekDergi}/3 farklı dergide`,
-      `Alternatif (1a/1b): ${altA.length}/3 yayın, ${Math.min(altATek, 1)}/1 tek yazarlı`
+    const kosullar = [
+      { kod: "toplam", ad: `Toplam en az ${T.esikToplam} puan`, gecti: toplam >= T.esikToplam - EPS,
+        deger: `${fmt(toplam)} / ${T.esikToplam}` },
+      { kod: "doksan", ad: `${ilkBuyuk(T.tarihAdi)} sonrası çalışmalardan en az ${T.esikDoktoraSonrasi} puan (3. madde hariç)`,
+        gecti: doksan >= T.esikDoktoraSonrasi - EPS, deger: `${fmt(doksan)} / ${T.esikDoktoraSonrasi}` }
     ];
-    if (yab) ayrinti2.push(`Yabancı uyruk (2a+1a/1b/1c): ${yab.dergi}/5 farklı dergi, tek yazarlı ${yab.tekDergi}/3`);
-    kosul({ kod: "m2", ad: "2. madde: ulusal makale şartı (veya alternatifi)", gecti: !!yol,
-            deger: d2.gecti ? "TR Dizin" : altAGecti ? "1a/1b" : yab && yab.gecti ? "Yabancı uyruk" : "Sağlanmıyor",
-            aciklama: d2.gecti ? ayrinti2[0] : (yol ? yol + " " : "") + ayrinti2.join(" · ") });
-
-    const n3 = satirlar.filter((s) => s.gecerli && bentte(s, ["3a", "3b", "3c", "3d", "3e", "3f", "3g", "3h"])).length;
-    kosul({ kod: "m3", ad: "3. madde: a–h bentlerinden en az bir yayın", gecti: n3 >= 1, deger: `${n3} yayın` });
-
-    const kitap = satirlar.filter((s) => dsGecerli(s) && bentte(s, ["4a", "4c"])).length;
-    const bolum = satirlar.filter((s) => dsGecerli(s) && bentte(s, ["4b", "4d"])).length;
-    kosul({ kod: "m4", ad: "4. madde: doktora sonrası en az bir kitap veya iki kitap bölümü",
-            gecti: kitap >= 1 || bolum >= 2, deger: `${kitap} kitap, ${bolum} bölüm`,
-            aciklama: "Aynı kitaptaki bölümler tek bölüm sayılır." });
-
-    const p5 = toplamla(satirlar.filter((s) => dsGecerli(s) && s.bolum === 5), (s) => s.puan);
-    kosul({ kod: "m5", ad: "5. madde: doktora sonrası yayınlara yapılan atıflardan en az 5 puan",
-            gecti: p5 >= 5 - EPS, deger: `${fmt(p5)} / 5` });
-
-    const p8 = toplamla(satirlar.filter((s) => dsGecerli(s) && s.bolum === 8), (s) => s.puan);
-    kosul({ kod: "m8", ad: "8. madde: doktora sonrası bilimsel toplantılardan en az 5 puan",
-            gecti: p8 >= 5 - EPS, deger: `${fmt(p8)} / 5` });
-
-    kosul({ kod: "m9", ad: "9. madde: eğitim-öğretimden en az 2 puan", gecti: puan9 >= 2 - EPS,
-            deger: `${fmt(puan9)} / 2` });
-
-    if (K.iletisimAlanlari.includes(ay.alan)) {
-      const p13 = toplamla(satirlar.filter((s) => s.gecerli && bentte(s, ["13c", "13d", "13e"])), (s) => s.puan);
-      kosul({ kod: "m13", ad: `13. madde: ${ay.alan} alanı için c, d, e bentlerinden en az 10 puan`,
-              gecti: p13 >= 10 - EPS, deger: `${fmt(p13)} / 10` });
+    const ortam = { satirlar, ay, T, puan9, uyar };
+    for (const kd of T.kosullar) {
+      const ad = typeof kd.ad === "function" ? kd.ad(ay) : kd.ad;
+      const muaf = kd.muaf ? kd.muaf(ay) : null;
+      if (muaf) { kosullar.push({ kod: kd.kod, ad, gecti: true, deger: "Aranmaz", aciklama: muaf }); continue; }
+      const kural = typeof kd.kural === "function" ? kd.kural(ay) : kd.kural;
+      if (!kural) continue;
+      const r = degerlendir(kural, ortam);
+      const aciklama = [r.aciklama, kd.aciklama].filter(Boolean).join(" ");
+      kosullar.push({ kod: kd.kod, ad, gecti: r.gecti, deger: r.deger, aciklama: aciklama || undefined });
     }
 
     // 7) Aynı eserin birden fazla satırda kullanılması
-    const yayinBolumleri = [1, 2, 3, 4, 8, 10];
     const idGrup = new Map();
-    for (const s of satirlar.filter((s) => s.gecerli && yayinBolumleri.includes(s.bolum))) {
+    for (const s of satirlar.filter((s) => s.gecerli && !s.sanal && [1, 2, 3, 4, 8, 10].includes(s.bolum))) {
       const id = norm(s.eser.eserId);
       if (!id) continue;
       if (!idGrup.has(id)) idGrup.set(id, []);
@@ -300,16 +294,97 @@
     }
     for (const rs of idGrup.values()) {
       if (rs.length < 2) continue;
-      const nolar = rs.map((s) => s.no).join(", ");
-      uyar(rs[0].no, `Aynı eser adı ${nolar}. satırlarda tekrar ediyor. Her çalışma tabloda yalnızca bir bölümde puanlanır.`);
+      uyar(rs[0].no, `Aynı eser adı ${rs.map((s) => s.no).join(", ")}. satırlarda tekrar ediyor. Her çalışma tabloda yalnızca bir bölümde puanlanır.`);
     }
 
     uyarilar.sort((a, b) => (a.satir ?? 1e9) - (b.satir ?? 1e9));
     const gecti = kosullar.every((k) => k.gecti);
-    return { satirlar, bolumler, toplam, doksan, kosullar, uyarilar, gecti, ayarlar: ay };
+    return { tablo: T, satirlar, bolumler, toplam, doksan, kosullar, uyarilar, gecti, ayarlar: ay };
   }
 
-  const Hesap = { hesapla, kodCoz, ehCoz, sayi, fmt, norm, ascii };
-  if (typeof module !== "undefined" && module.exports) module.exports = Hesap;
+  const ilkBuyuk = (s) => s.charAt(0).toLocaleUpperCase("tr-TR") + s.slice(1);
+
+  // ---------- zorunlu koşul değerlendirici ----------
+  function suz(ortam, suzgec) {
+    return ortam.satirlar.filter((s) => s.gecerli && !s.elendi && !s.sanal && uyarMi(s, suzgec) &&
+      (!suzgec.ds || s.ds));
+  }
+  function uyarMi(s, z) {
+    if (z.kodlar) return z.kodlar.includes(s.kalem.kod);
+    if (z.bentler) return z.bentler.includes(s.bent);
+    if (z.bolum) return s.bolum === z.bolum;
+    return true;
+  }
+
+  function degerlendir(ifade, ortam) {
+    switch (ifade.tip) {
+      case "puan": {
+        const p = toplamla(suz(ortam, ifade.suzgec), (s) => s.puan);
+        return { gecti: p >= ifade.enAz - EPS, deger: `${fmt(p)} / ${ifade.enAz} puan` };
+      }
+      case "sayi": {
+        const rs = suz(ortam, ifade.suzgec);
+        const parcalar = [`${rs.length}/${ifade.enAz} yayın`];
+        let gecti = rs.length >= ifade.enAz;
+        const kontrol = (n, enAz, ad) => {
+          if (enAz == null) return;
+          parcalar.push(`${ad} ${Math.min(n, enAz)}/${enAz}`);
+          if (n < enAz) gecti = false;
+        };
+        kontrol(rs.filter((s) => s.yazar === 1).length, ifade.tekEnAz, "tek yazarlı");
+        kontrol(rs.filter((s) => s.baslica).length, ifade.baslicaEnAz, "başlıca yazar");
+        kontrol(rs.filter((s) => s.eser.kendisiSundu === true).length, ifade.kendisiSunduEnAz, "kendisi sunmuş");
+        if (ifade.altKume) {
+          kontrol(rs.filter((s) => uyarMi(s, ifade.altKume.suzgec)).length, ifade.altKume.enAz, `${ifade.altKume.ad}’dan`);
+        }
+        return { gecti, deger: ifade.enAz === 1 && parcalar.length === 1 ? `${rs.length} yayın` : parcalar.join(", ") };
+      }
+      case "dergi": {
+        const rs = suz(ortam, ifade.suzgec);
+        rs.filter((s) => !norm(s.eser.kaynak)).forEach((s) =>
+          ortam.uyar(s.no, "Dergi adı girilmemiş; farklı dergi şartında ayrı dergi kabul edildi."));
+        const dergi = (s) => norm(s.eser.kaynak) || `__satir${s.no}`;
+        const D = new Set(rs.map(dergi)).size;
+        const tekler = rs.filter((s) => s.yazar === 1);
+        let gecti, tekDeger;
+        if (ifade.farkli >= ifade.toplam) {
+          // Hepsi ayrı dergilerde olmalı: tek yazarlılar da ayrı dergilerden seçilmeli
+          const S = new Set(tekler.map(dergi)).size;
+          gecti = S >= ifade.tek && D >= ifade.toplam;
+          tekDeger = `tek yazarlı ${Math.min(S, ifade.tek)}/${ifade.tek} farklı dergide`;
+        } else {
+          gecti = rs.length >= ifade.toplam && tekler.length >= ifade.tek && D >= ifade.farkli;
+          tekDeger = `tek yazarlı ${Math.min(tekler.length, ifade.tek)}/${ifade.tek}`;
+        }
+        return { gecti, deger: `${rs.length}/${ifade.toplam} yayın, ${Math.min(D, ifade.farkli)}/${ifade.farkli} farklı dergi, ${tekDeger}` };
+      }
+      case "ogretim":
+        return { gecti: ortam.puan9 >= ifade.enAz - EPS, deger: `${fmt(ortam.puan9)} / ${ifade.enAz} puan` };
+      case "hata":
+        return { gecti: false, deger: ifade.deger || "Belirlenemedi", aciklama: ifade.mesaj };
+      case "ve": {
+        const rs = ifade.parcalar.map((p) => degerlendir(p, ortam));
+        return { gecti: rs.every((r) => r.gecti), deger: rs.map((r) => r.deger).join(" · "),
+                 aciklama: rs.map((r) => r.aciklama).filter(Boolean).join(" ") || undefined };
+      }
+      case "veya": {
+        const secenekler = ifade.parcalar.filter((p) => !p.yalnizcaYabanci || ortam.ay.yabanci);
+        const rs = secenekler.map((p) => ({ p, r: degerlendir(p, ortam) }));
+        const gecen = rs.find((x) => x.r.gecti);
+        const satir = (x) => `${x.p.etiket || "Seçenek"}: ${x.r.deger}`;
+        if (gecen) {
+          return { gecti: true, deger: gecen.p.etiket || "Sağlanıyor",
+                   aciklama: gecen === rs[0] ? satir(gecen) : `${gecen.p.etiket} yoluyla sağlanıyor. ${satir(gecen)}` };
+        }
+        return { gecti: false, deger: "Sağlanmıyor", aciklama: rs.map(satir).join(" · ") };
+      }
+      default:
+        throw new Error("Bilinmeyen koşul tipi: " + ifade.tip);
+    }
+  }
+
+  const Hesap = { hesapla, kodCoz, ehCoz, yazarlikCoz, sayi, fmt, norm, ascii, tabloBul, baslicaPayi,
+                  tablolar: () => Ortak.sirali() };
+  if (NODE) module.exports = Hesap;
   else root.Hesap = Hesap;
 })(typeof window !== "undefined" ? window : globalThis);

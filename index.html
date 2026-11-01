@@ -12,8 +12,8 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Doçentlik Puan Hesaplama · Sosyal, Beşeri ve İdari Bilimler</title>
-<meta name="description" content="ÜAK Tablo 11 kriterlerine göre doçentlik başvuru puanı ve zorunlu koşul kontrolü. Veriler tarayıcıdan çıkmaz.">
 <link rel="canonical" href="https://altinisik.ezgilab.com/DocentlikPuanHesaplama/">
+<meta name="description" content="ÜAK Tablo 11 kriterlerine göre doçentlik başvuru puanı ve zorunlu koşul kontrolü. Veriler tarayıcıdan çıkmaz.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -144,6 +144,7 @@ td { padding: 4px 6px; border-bottom: 1px solid var(--cizgi); vertical-align: mi
 .eserler .c-eh { width: 64px; }
 .eserler .c-sayi { width: 72px; }
 .eserler .c-kaynak { min-width: 170px; }
+.eserler .c-yazarlik { min-width: 180px; }
 .eserler td.puan { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; width: 64px; padding-right: 10px; }
 .eserler tr.kirpildi td.sayilan { color: var(--kirpik); font-weight: 600; }
 .eserler tr.hatali select[data-f="madde"] { border-color: var(--kaldi); background: var(--kirpik-zemin); }
@@ -161,7 +162,7 @@ td { padding: 4px 6px; border-bottom: 1px solid var(--cizgi); vertical-align: mi
 .kosullar .isaret { font-weight: 700; }
 .kosullar .ok .isaret { color: var(--gecti); }
 .kosullar .yok .isaret { color: var(--kaldi); }
-.kosullar .dgr { font-variant-numeric: tabular-nums; color: var(--soluk); white-space: nowrap; }
+.kosullar .dgr { font-variant-numeric: tabular-nums; color: var(--soluk); max-width: 11em; text-align: right; font-size: 13px; }
 .kosullar .yok .dgr { color: var(--kaldi); }
 .kosullar .acik { grid-column: 2 / -1; font-size: 12.5px; color: var(--soluk); }
 
@@ -186,6 +187,22 @@ details li { margin-bottom: 6px; max-width: 80ch; }
 footer { margin-top: 48px; font-size: 13px; color: var(--soluk); }
 .bildirim { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--murekkep);
   color: var(--kagit); padding: 10px 18px; border-radius: 4px; font-size: 14px; max-width: 90vw; }
+/* temel alan seçimi */
+header.ust > div { min-width: 0; }
+.tablo-secim { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 14px; }
+.tablo-secim label { font-weight: 600; font-size: 14px; }
+.tablo-secim select { font: 500 15px var(--sans); color: var(--murekkep); padding: 7px 10px; flex: 0 1 360px; min-width: 0; max-width: 100%;
+  background: var(--yuzey); border: 1px solid var(--soluk); border-radius: 4px; }
+.beta-kutu { margin: 20px 0 0; padding: 12px 16px; border-left: 3px solid var(--beta); background: var(--beta-zemin);
+  border-radius: 0 4px 4px 0; font-size: 14px; max-width: 100ch; }
+.beta-kutu strong { display: block; margin-bottom: 2px; }
+[hidden] { display: none !important; }
+.puan-tablosu { width: 100%; font-size: 13.5px; margin: 4px 0 14px; }
+.puan-tablosu th, .puan-tablosu td { padding: 5px 8px; border-bottom: 1px solid var(--cizgi); vertical-align: top; }
+.puan-tablosu td.n, .puan-tablosu th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.puan-tablosu tr.bolum td { font-weight: 600; background: var(--kagit); }
+.puan-tablosu td.kod { white-space: nowrap; font-weight: 600; }
+details h3 { font: 600 15px var(--sans); margin: 14px 0 6px; }
 .gorunmez { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 </style>
 </head>
@@ -194,10 +211,20 @@ footer { margin-top: 48px; font-size: 13px; color: var(--soluk); }
   <header class="ust">
     <div>
       <h1>Doçentlik puan hesaplama</h1>
-      <p>ÜAK Tablo 11, Sosyal, Beşeri ve İdari Bilimler temel alanı. Puanlar, madde tavanları ve zorunlu koşullar eser listenize göre anında hesaplanır.</p>
+      <p id="altbaslik">Puanlar, madde tavanları ve zorunlu koşullar eser listenize göre anında hesaplanır.</p>
+      <div class="tablo-secim">
+        <label for="tablo">Temel alan</label>
+        <select id="tablo"></select>
+        <span class="rozet" id="tablo-beta" hidden>Beta</span>
+      </div>
     </div>
     <p class="gizlilik">Eser listeniz hiçbir sunucuya gönderilmez; yalnızca bu tarayıcıda saklanır.</p>
   </header>
+
+  <div class="beta-kutu" id="beta-kutu" role="note" hidden>
+    <strong>Bu temel alanın kuralları yeni eklendi ve henüz bu alandan biri tarafından doğrulanmadı.</strong>
+    Hesaplama ÜAK’ın yayımladığı tabloya göre yapılır, ama hata olabilir. Yorum gerektiren noktalar sayfanın altındaki “Hesaplama nasıl yapılıyor?” bölümünde listelenmiştir. Bir hata fark ederseniz lütfen bildirin.
+  </div>
 
   <div class="ust-izgara">
     <div class="durum" aria-live="polite">
@@ -221,7 +248,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--soluk); }
           <button class="ana" id="ekle" type="button">Satır ekle</button>
           <label class="dugme" for="dosya">Excel dosyası yükle</label>
           <input class="gorunmez" type="file" id="dosya" accept=".xlsx,.xls,.ods">
-          <a class="dugme" href="sablon/docentlik_sablon.xlsx" download>Boş şablonu indir</a>
+          <a class="dugme" id="sablon-link" href="sablon/tablo-11_sablon.xlsx" download>Boş şablonu indir</a>
           <button id="kaydet" type="button">Excel olarak kaydet</button>
           <a class="dugme" href="orcid.html" title="Deneme aşamasında: ORCID kaydınızdaki bilgiler eksikse puan doğru hesaplanamayabilir">ORCID’den aktar <span class="rozet">Beta</span></a>
           <button id="ornek" type="button">Örnek veriyle dene</button>
@@ -231,31 +258,18 @@ footer { margin-top: 48px; font-size: 13px; color: var(--soluk); }
         <p class="beta-not">ORCID’den aktarma deneme aşamasındadır. Puan, ORCID kaydınızdaki bilgiler kadar doğru hesaplanabilir; aktarılan yayınların maddesini ve yazar sayısını mutlaka kontrol edin.</p>
 
         <div class="ayarlar" id="ayarlar">
-          <label>Bilim alanı
+          <label id="ay-alan-kutu">Bilim alanı
             <select id="ay-alan"></select>
           </label>
-          <label><input type="checkbox" id="ay-kadrolu"> Doktora sonrası en az 2 yıl kadrolu öğretim elemanıyım</label>
+          <label><input type="checkbox" id="ay-kadrolu"> <span id="ay-kadrolu-metin">Doktora sonrası en az 2 yıl kadrolu öğretim elemanıyım</span></label>
           <label><input type="checkbox" id="ay-yabanci"> Yabancı uyrukluyum / yurt dışı denklik başvurusu</label>
+          <label><input type="checkbox" id="ay-once2016"> <span id="ay-once2016-metin">Doktora unvanımı Aralık 2016’dan önce aldım</span></label>
         </div>
 
         <div class="kaydir">
           <table class="eserler">
-            <thead>
-              <tr>
-                <th class="no">#</th>
-                <th>Eser / faaliyet</th>
-                <th>Madde</th>
-                <th title="Doktora unvanından sonra mı? Atıflarda: atıf alan eser doktora sonrası mı?">Doktora sonrası</th>
-                <th title="Yayın, bildiri ve patentlerde puan bu sayıya bölünür">Yazar / kişi</th>
-                <th title="Atıf sayısı (5) ya da farklı yarıyıl/yıl sayısı (9)">Adet</th>
-                <th title="2a'da dergi, 4b/4d'de kitap, 8'de toplantı adı">Dergi / kitap / toplantı</th>
-                <th>Tezden</th>
-                <th class="puan">Puan</th>
-                <th class="puan">Sayılan</th>
-                <th><span class="gorunmez">Sil</span></th>
-              </tr>
-            </thead>
-            <tbody id="govde-bos"><tr><td colspan="11" class="bos">Henüz eser yok. Şablonu doldurup yükleyin, satır ekleyin ya da örnek veriyle deneyin.</td></tr></tbody>
+            <thead id="baslik-satiri"></thead>
+            <tbody id="govde-bos"><tr><td colspan="13" class="bos">Henüz eser yok. Şablonu doldurup yükleyin, satır ekleyin ya da örnek veriyle deneyin.</td></tr></tbody>
           </table>
         </div>
       </section>
@@ -274,40 +288,27 @@ footer { margin-top: 48px; font-size: 13px; color: var(--soluk); }
 
       <section>
         <h2>Hesaplama nasıl yapılıyor?</h2>
-        <details>
-          <summary>Puanlama kuralları</summary>
-          <ul>
-            <li>Yayın, bildiri ve patentlerde puan yazar/kişi sayısına eşit bölünür. Atıf, proje, danışmanlık, ödül, editörlük ve diğer faaliyetler bölünmez.</li>
-            <li>Toplam puan, madde tavanları uygulandıktan sonra tüm eserlerin toplamıdır. Doktora öncesi puana ayrıca sınır konmaz.</li>
-            <li>Doktora sonrası puan, doktora unvanından sonraki çalışmalardan alınan puandır; 3. madde (tezden üretilmiş yayın) bu toplama hiç girmez.</li>
-            <li>Bir madde tavanı aşıldığında önce doktora sonrası puanlar sayılır. Bu, 90 puan şartı açısından adayın lehine olan yorumdur.</li>
-            <li>3g + 3h ve 4c + 4d için toplamda en fazla 5 puan alınır. Aynı kitaptan yalnızca bir bölüm, aynı toplantıdan yalnızca bir çalışma puanlanır; en yüksek puanlı olan seçilir.</li>
-            <li>9a'da 4 farklı yarıyıl, 9b'de 2 farklı yıl 2 puan eder. Doktora sonrası 2 yıl kadrolu görev 2 puan almış sayılır ama ders puanına eklenmez.</li>
-          </ul>
-        </details>
-        <details>
-          <summary>Yoruma açık noktalar</summary>
-          <ul>
-            <li>5. maddedeki doktora sonrası şartı, atıf alan eserin doktora sonrası yayımlanmış olması olarak yorumlandı.</li>
-            <li>2. maddedeki “farklı dergilerde beş yayın” şartı, beş yayının en az beş ayrı dergide olması olarak yorumlandı. Bu nedenle 2a satırlarında dergi adını yazmak önemlidir.</li>
-            <li>2. maddenin 1a/1b alternatifinde yayınların doktora sonrası olması arandı; bu yayınlar 1. maddenin 10 puan şartına da sayılır.</li>
-            <li>Yabancı uyruk/denklik durumunda TR Dizin yayınları 1a, 1b, 1c yayınlarıyla birlikte değerlendirildi.</li>
-            <li>Eserlerin başvurulan bilim alanıyla ilgili olması, kitap bölümlerinin alanla ilgisi ve kendinize yaptığınız atıfların ayıklanması gibi konular hesaplanamaz; bunları sizin kontrol etmeniz gerekir.</li>
-          </ul>
-        </details>
+        <div id="kurallar-aciklama"></div>
       </section>
     </main>
   </div>
 
   <footer>
     Bu araç bilgilendirme amaçlıdır; resmi değerlendirme ÜAK jürisi tarafından yapılır. Kriterlerin güncel metni için
-    <a href="https://www.uak.gov.tr" rel="noopener">uak.gov.tr</a> adresine bakın. Hazırlayan: <a href="https://altinisik.ezgilab.com/" rel="noopener">N. Ezgi Altınışık</a>
+    <a href="https://www.uak.gov.tr" rel="noopener">uak.gov.tr</a> adresine bakın.
   </footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="js/kurallar.js"></script>
-<script src="js/hesap.js"></script>
-<script src="js/app.js"></script>
+<script src="js/kurallar/ortak.js?v=2.0"></script>
+<script src="js/kurallar/tablo01.js?v=2.0"></script>
+<script src="js/kurallar/tablo02.js?v=2.0"></script>
+<script src="js/kurallar/tablo05.js?v=2.0"></script>
+<script src="js/kurallar/tablo09.js?v=2.0"></script>
+<script src="js/kurallar/tablo10.js?v=2.0"></script>
+<script src="js/kurallar/tablo11.js?v=2.0"></script>
+<script src="js/kurallar/tablo12.js?v=2.0"></script>
+<script src="js/hesap.js?v=2.0"></script>
+<script src="js/app.js?v=2.0"></script>
 </body>
 </html>

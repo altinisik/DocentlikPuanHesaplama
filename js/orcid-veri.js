@@ -78,7 +78,7 @@
   // ORCID türü → önerilen maddeler. Kesin atama yapılmaz; kullanıcı seçer.
   const TURLER = {
     "journal-article": { ad: "Makale", secili: true,
-      oneri: ["1a-Q1", "1a-Q2", "1a-Q3", "1a-Q4", "1b", "1c", "1d", "2a", "2b", "3a", "3b", "3c", "3d"],
+      oneri: ["1a-Q1", "1a-Q2", "1a-Q3", "1a-Q4", "1b", "1c", "1d", "1f", "2a", "2b", "3a", "3b", "3c", "3d"],
       ipucu: "İndeksine göre 1. ya da 2. madde; tezden üretildiyse 3. madde" },
     "book": { ad: "Kitap", secili: true, oneri: ["4a", "4c", "3e", "3g"],
       ipucu: "BKCI'daysa 4a, değilse 4c; tezden üretildiyse 3e/3g" },

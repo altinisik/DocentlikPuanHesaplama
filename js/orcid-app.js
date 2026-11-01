@@ -1,6 +1,12 @@
 /* ORCID içe aktarma (beta) arayüzü. Hesaplama sayfasıyla aynı tarayıcı deposunu kullanır. */
 (function () {
-  const K = window.KURALLAR;
+  // Madde listesi, hesaplama sayfasında seçili temel alanın kurallarına göre hazırlanır
+  const K = (() => {
+    try {
+      const v = JSON.parse(localStorage.getItem("docentlik-puan-v1") || "null");
+      return window.Hesap.tabloBul(v && v.ayarlar && v.ayarlar.tablo);
+    } catch (e) { return window.Hesap.tabloBul("11"); }
+  })();
   const O = window.OrcidVeri;
   const ANA_DEPO = "docentlik-puan-v1";      // hesaplama sayfasının deposu
   const ORCID_DEPO = "docentlik-orcid-v1";   // bu sayfanın son girdileri
@@ -21,8 +27,11 @@
   function anaListe() {
     const v = oku(ANA_DEPO);
     return v && Array.isArray(v.eserler) ? v
-      : { ayarlar: { alan: "Diğer", yabanci: false, kadrolu: false }, eserler: [] };
+      : { ayarlar: { tablo: K.id, alan: (K.alanlar && K.alanlar.varsayilan) || "", yabanci: false, kadrolu: false, once2016: false }, eserler: [] };
   }
+
+  $("#tablo-bilgi").textContent = `Maddeler Tablo ${K.no} · ${K.ad} kurallarına göre listelenir. Başka bir temel alan için önce hesaplama sayfasında alanı değiştirin.` +
+    (K.bolme === "baslica" ? " Bu alanda makale puanı başlıca yazara göre hesaplanır; başlıca yazar bilgisini aktardıktan sonra hesaplama sayfasında girin." : "");
 
   const son = oku(ORCID_DEPO) || {};
   if (son.orcid) $("#orcid").value = son.orcid;
@@ -36,7 +45,7 @@
 
   // ---------- madde seçimi ----------
   function maddeSecenekleri(tur, secili) {
-    const oneri = O.turBilgisi(tur).oneri;
+    const oneri = O.turBilgisi(tur).oneri.filter((kod) => kalemByKod.has(kod));
     const sec = (kod) => (kod === secili ? " selected" : "");
     let h = `<option value="">Seçin…</option>`;
     if (oneri.length) {
