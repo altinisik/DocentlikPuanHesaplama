@@ -23,6 +23,7 @@
   --kirpik: #9A6512;
   --kirpik-zemin: #FBF1DD;
   --girdi: #FFFDF6;
+  --beta: #6B4FA0; --beta-zemin: #F1ECF9;
   --b1: #23395B; --b2: #3E6A9E; --b3: #93AFCF; --b4: #2F6F6A; --b5: #5FA39B;
   --b6: #8C6BB1; --b7: #B07AA1; --b8: #C9883A; --b9: #E0B25B; --b10: #6B7F3A;
   --b11: #A33B3B; --b12: #8A8F98; --b13: #5B5F66;
@@ -35,6 +36,7 @@
     --kagit: #14181F; --yuzey: #1B212B; --murekkep: #E6E9EE; --soluk: #9AA3B2;
     --cizgi: #2E3643; --vurgu: #8FB0DD; --vurgu-acik: #223047; --gecti: #5CC08A;
     --kaldi: #F2786C; --kirpik: #E2B15A; --kirpik-zemin: #2E2618; --girdi: #1F2630;
+    --beta: #B9A3E3; --beta-zemin: #2A2338;
     --b1: #6E8FC4; --b13: #9AA0A8;
     color-scheme: dark;
   }
@@ -102,6 +104,9 @@ button, .dugme {
 }
 button:hover, .dugme:hover { border-color: var(--soluk); }
 button.ana { background: var(--vurgu); border-color: var(--vurgu); color: var(--yuzey); }
+.rozet { font: 600 11px/1 var(--sans); color: var(--beta); background: var(--beta-zemin);
+  border: 1px solid var(--beta); border-radius: 999px; padding: 3px 7px; letter-spacing: .02em; }
+.beta-not { font-size: 13px; color: var(--soluk); margin: -6px 0 16px; max-width: 80ch; }
 button.sessiz { border-color: transparent; background: transparent; color: var(--soluk); }
 
 /* ayarlar */
@@ -132,7 +137,7 @@ td { padding: 4px 6px; border-bottom: 1px solid var(--cizgi); vertical-align: mi
 .eserler .c-kaynak { min-width: 170px; }
 .eserler td.puan { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; width: 64px; padding-right: 10px; }
 .eserler tr.kirpildi td.sayilan { color: var(--kirpik); font-weight: 600; }
-.eserler tr.hatali select[data-f="madde"] { border-color: var(--kaldi); }
+.eserler tr.hatali select[data-f="madde"] { border-color: var(--kaldi); background: var(--kirpik-zemin); }
 .eserler tr.notlar td { border-bottom: 1px solid var(--cizgi); padding: 0 10px 8px 40px; font-size: 13px; color: var(--kirpik); }
 .eserler tr.eser:has(+ tr.notlar:not([hidden])) td { border-bottom: 0; }
 .eserler .sil { padding: 4px 8px; border: 0; background: transparent; color: var(--soluk); font-size: 18px; line-height: 1; }
@@ -209,9 +214,12 @@ footer { margin-top: 48px; font-size: 13px; color: var(--soluk); }
           <input class="gorunmez" type="file" id="dosya" accept=".xlsx,.xls,.ods">
           <a class="dugme" href="sablon/docentlik_sablon.xlsx" download>Boş şablonu indir</a>
           <button id="kaydet" type="button">Excel olarak kaydet</button>
+          <a class="dugme" href="orcid.html" title="Deneme aşamasında: ORCID kaydınızdaki bilgiler eksikse puan doğru hesaplanamayabilir">ORCID’den aktar <span class="rozet">Beta</span></a>
           <button id="ornek" type="button">Örnek veriyle dene</button>
           <button class="sessiz" id="temizle" type="button">Listeyi temizle</button>
         </div>
+
+        <p class="beta-not">ORCID’den aktarma deneme aşamasındadır. Puan, ORCID kaydınızdaki bilgiler kadar doğru hesaplanabilir; aktarılan yayınların maddesini ve yazar sayısını mutlaka kontrol edin.</p>
 
         <div class="ayarlar" id="ayarlar">
           <label>Bilim alanı

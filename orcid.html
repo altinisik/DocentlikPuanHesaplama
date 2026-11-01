@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORCID’den yayın aktarma (beta) · Doçentlik Puan Hesaplama</title>
+<meta name="description" content="ORCID kaydınızdaki yayınları doçentlik puan hesaplama listesine aktarın. Beta.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --kagit: #F6F7F4; --yuzey: #FFFFFF; --murekkep: #1E2B40; --soluk: #5A6474; --cizgi: #D9DDD6;
+  --vurgu: #23395B; --gecti: #2E7D4F; --kaldi: #B42318; --kirpik: #9A6512; --kirpik-zemin: #FBF1DD;
+  --girdi: #FFFDF6; --beta: #6B4FA0; --beta-zemin: #F1ECF9;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --kagit: #14181F; --yuzey: #1B212B; --murekkep: #E6E9EE; --soluk: #9AA3B2; --cizgi: #2E3643;
+    --vurgu: #8FB0DD; --gecti: #5CC08A; --kaldi: #F2786C; --kirpik: #E2B15A; --kirpik-zemin: #2E2618;
+    --girdi: #1F2630; --beta: #B9A3E3; --beta-zemin: #2A2338;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--kagit); color: var(--murekkep); font: 15px/1.55 var(--sans); }
+a { color: var(--vurgu); }
+:focus-visible { outline: 2px solid var(--vurgu); outline-offset: 2px; }
+.sayfa { max-width: 1320px; margin: 0 auto; padding: 32px 24px 64px; }
+
+header.ust { padding-bottom: 20px; border-bottom: 1px solid var(--cizgi); }
+.geri { font-size: 14px; display: inline-block; margin-bottom: 12px; }
+h1 { font: 600 clamp(26px, 3.2vw, 38px)/1.1 var(--serif); margin: 0; letter-spacing: -0.01em;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.rozet { font: 600 13px/1 var(--sans); color: var(--beta); background: var(--beta-zemin);
+  border: 1px solid var(--beta); border-radius: 999px; padding: 5px 10px; letter-spacing: .02em; }
+header.ust p { margin: 8px 0 0; color: var(--soluk); max-width: 70ch; }
+
+.uyari-kutu { margin: 24px 0 0; padding: 14px 18px; border-left: 3px solid var(--beta);
+  background: var(--beta-zemin); border-radius: 0 4px 4px 0; max-width: 90ch; font-size: 14px; }
+.uyari-kutu strong { display: block; margin-bottom: 4px; font-size: 15px; }
+.uyari-kutu ul { margin: 6px 0 0; padding-left: 18px; }
+
+form.getir { display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: end; margin: 28px 0 0;
+  padding: 18px; background: var(--yuzey); border: 1px solid var(--cizgi); border-radius: 4px; }
+form.getir label { display: grid; gap: 4px; font-size: 14px; font-weight: 500; }
+form.getir small { font-weight: 400; color: var(--soluk); }
+form.getir input { font: 15px var(--sans); color: var(--murekkep); padding: 8px 10px; background: var(--girdi);
+  border: 1px solid var(--cizgi); border-radius: 3px; }
+#orcid { width: 22ch; font-variant-numeric: tabular-nums; }
+#dryil { width: 10ch; }
+
+button, .dugme { font: 500 14px var(--sans); color: var(--murekkep); background: var(--yuzey);
+  border: 1px solid var(--cizgi); border-radius: 4px; padding: 8px 14px; cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; }
+button:hover, .dugme:hover { border-color: var(--soluk); }
+button.ana, .dugme.ana { background: var(--vurgu); border-color: var(--vurgu); color: var(--yuzey); }
+button:disabled { opacity: .5; cursor: default; }
+
+.durum-satiri { margin: 16px 0 0; min-height: 1.5em; color: var(--soluk); font-size: 14px; }
+.durum-satiri.hata { color: var(--kaldi); }
+
+section.onizleme { margin-top: 28px; }
+h2 { font: 600 20px/1.3 var(--serif); margin: 0 0 4px; }
+.alt { color: var(--soluk); font-size: 14px; margin: 0 0 14px; max-width: 80ch; }
+.arac { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.arac .ozet { font-size: 14px; color: var(--soluk); margin-left: 6px; }
+
+.kaydir { overflow-x: auto; border: 1px solid var(--cizgi); border-radius: 4px; background: var(--yuzey); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th { text-align: left; font-weight: 600; font-size: 13px; color: var(--soluk); padding: 10px 8px;
+  border-bottom: 1px solid var(--cizgi); white-space: nowrap; }
+td { padding: 8px; border-bottom: 1px solid var(--cizgi); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0; }
+tr.pasif td { color: var(--soluk); }
+tr.pasif td.baslik { text-decoration: line-through; text-decoration-color: var(--cizgi); }
+td.sec { width: 32px; padding-top: 11px; }
+td.sec input { width: 17px; height: 17px; }
+td.baslik { min-width: 260px; max-width: 420px; }
+td.baslik .doi { display: block; font-size: 12.5px; color: var(--soluk); margin-top: 2px; word-break: break-all; }
+td.baslik .etiket { display: inline-block; font-size: 12px; color: var(--kirpik); margin-top: 3px; }
+td.tur { white-space: nowrap; }
+td.yil { font-variant-numeric: tabular-nums; }
+td input, td select { font: 14px var(--sans); color: var(--murekkep); width: 100%; padding: 6px 7px;
+  background: var(--girdi); border: 1px solid var(--cizgi); border-radius: 3px; }
+td.kaynak { min-width: 170px; }
+td.yazar { width: 84px; }
+td.yazar small, td.madde small { display: block; font-size: 12px; color: var(--soluk); margin-top: 3px; }
+td.ds { width: 76px; }
+td.madde { min-width: 230px; }
+.eksik { border-color: var(--kirpik) !important; background: var(--kirpik-zemin) !important; }
+
+.sonuc { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.sonuc .not { font-size: 14px; color: var(--kirpik); max-width: 80ch; }
+.basari { margin-top: 20px; padding: 14px 18px; border-left: 3px solid var(--gecti); background: var(--yuzey);
+  border-radius: 0 4px 4px 0; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+footer { margin-top: 48px; font-size: 13px; color: var(--soluk); max-width: 90ch; }
+[hidden] { display: none !important; }
+tr.secilmedi .eksik { border-color: var(--cizgi) !important; background: var(--girdi) !important; }
+.gorunmez { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<div class="sayfa">
+  <header class="ust">
+    <a class="geri" href="index.html">Hesaplama sayfasına dön</a>
+    <h1>ORCID’den yayın aktarma <span class="rozet">Beta</span></h1>
+    <p>ORCID kaydınızdaki yayınları getirir, sizin kontrol edip tamamladıklarınızı hesaplama sayfasındaki listenize ekler.</p>
+  </header>
+
+  <div class="uyari-kutu" role="note">
+    <strong>Bu özellik deneme aşamasındadır.</strong>
+    Puan, yalnızca ORCID kaydınızdaki ve buradaki bilgiler kadar doğru hesaplanabilir. ORCID kaydınızda eksik, tekrarlı ya da hatalı yayın varsa sonuç da yanlış olur.
+    <ul>
+      <li>İndeks (SSCI, ESCI, Scopus, TR Dizin) ve Q dilimi ORCID’de yoktur. Her yayın için maddeyi sizin seçmeniz gerekir.</li>
+      <li>Yazar sayısı yalnızca DOI’si olan yayınlar için Crossref’ten alınır. DOI’siz yayınlarda kendiniz girin; boş bırakılırsa tek yazarlı kabul edilir ve puanınız olduğundan yüksek görünebilir.</li>
+      <li>Tezden üretilip üretilmediği, atıflar, projeler, danışmanlık ve dersler aktarılmaz. Bunları hesaplama sayfasında ekleyin.</li>
+    </ul>
+  </div>
+
+  <form class="getir" id="form" novalidate>
+    <label for="orcid">ORCID numarası
+      <input id="orcid" name="orcid" placeholder="0000-0000-0000-0000" autocomplete="off" inputmode="text" required>
+    </label>
+    <label for="dryil">Doktora yılı <small>Doktora öncesi/sonrası için</small>
+      <input id="dryil" name="dryil" type="number" min="1950" max="2100" step="1" inputmode="numeric" placeholder="ör. 2018">
+    </label>
+    <button class="ana" type="submit" id="getir">Yayınları getir</button>
+  </form>
+  <p class="durum-satiri" id="durum" role="status" aria-live="polite"></p>
+
+  <section class="onizleme" id="onizleme" hidden>
+    <h2>Yayınlarınız</h2>
+    <p class="alt">Aktarmak istediklerinizi seçin ve her biri için maddeyi belirleyin. Önerilen maddeler listenin başında yer alır. Doktora yılıyla aynı yıl yayımlananlarda doktora öncesi/sonrası seçimini siz yapın. Sonradan hesaplama sayfasında da değiştirebilirsiniz.</p>
+    <div class="arac">
+      <button type="button" id="hepsi">Tümünü seç</button>
+      <button type="button" id="hicbiri">Seçimi kaldır</button>
+      <span class="ozet" id="ozet"></span>
+    </div>
+    <div class="kaydir">
+      <table>
+        <thead><tr>
+          <th><span class="gorunmez">Seç</span></th>
+          <th>Başlık</th><th>Tür</th><th>Yıl</th><th>Dergi / kitap / toplantı</th>
+          <th>Yazar</th><th>Doktora sonrası</th><th>Madde</th>
+        </tr></thead>
+        <tbody id="govde"></tbody>
+      </table>
+    </div>
+    <div class="sonuc">
+      <button class="ana" type="button" id="ekle">Seçilenleri listeye ekle</button>
+      <span class="not" id="ekle-not"></span>
+    </div>
+    <div class="basari" id="basari" hidden>
+      <span id="basari-metin"></span>
+      <a class="dugme ana" href="index.html">Hesaplama sayfasına git</a>
+    </div>
+  </section>
+
+  <footer>
+    ORCID numaranızı girdiğinizde tarayıcınız doğrudan ORCID’e (pub.orcid.org) ve DOI’li yayınlar için Crossref’e (api.crossref.org) istek gönderir. Bu sitenin bir sunucusu yoktur; yayın listeniz yalnızca tarayıcınızda saklanır.
+  </footer>
+</div>
+
+<script src="js/kurallar.js"></script>
+<script src="js/hesap.js"></script>
+<script src="js/orcid-veri.js"></script>
+<script src="js/orcid-app.js"></script>
+</body>
+</html>

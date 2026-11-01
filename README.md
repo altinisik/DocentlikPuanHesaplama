@@ -31,9 +31,28 @@ Araç, kolay erişim için **Claude Opus 5.5 ile baştan yeniden yazıldı**. Ar
 
 Aracı önce denemek isterseniz **Örnek veriyle dene** düğmesi kurgusal bir adayın dosyasını yükler.
 
+### ORCID’den yayın aktarma (beta)
+
+Yayınlarınızı tek tek yazmak yerine ORCID kaydınızdan çekebilirsiniz: <https://altinisik.ezgilab.com/DocentlikPuanHesaplama/orcid.html>
+
+1.  ORCID numaranızı ve doktora unvanını aldığınız yılı girip **Yayınları getir** düğmesine tıklayın.
+2.  Kaydınızdaki yayınlar bir önizleme tablosunda listelenir. Tablo şunları içerir:
+    - başlık, tür, yıl ve dergi/kitap/toplantı adı,
+    - DOI’si olan yayınlar için Crossref’ten alınan yazar sayısı,
+    - yayın yılına göre doktora öncesi/sonrası bilgisi (doktora yılıyla aynı yıl olanlar boş bırakılır).
+3.  Her yayın için **maddeyi siz seçin**. Yayının türüne göre önerilen maddeler listenin başında yer alır. Turuncu alanlar eksik bilgileri gösterir.
+4.  **Seçilenleri listeye ekle** düğmesiyle yayınlar hesaplama sayfasındaki listenize eklenir. Listenizde zaten olan yayınlar (aynı DOI ya da başlık) tekrar eklenmez.
+5.  Atıf, proje, danışmanlık, ders gibi diğer kalemleri hesaplama sayfasında ekleyin.
+
+> ⚠️ **Bu özellik deneme aşamasındadır.** Puan, yalnızca ORCID kaydınızdaki bilgiler kadar doğru hesaplanabilir. ORCID kaydınızda eksik, tekrarlı ya da hatalı yayın varsa sonuç da yanlış olur. Ayrıca:
+>
+> - İndeks (SSCI, ESCI, Scopus, TR Dizin) ve Q dilimi ORCID’de bulunmaz; maddeyi her yayın için sizin seçmeniz gerekir. Madde seçilmeyen yayınlar puan almaz.
+> - DOI’si olmayan yayınlarda yazar sayısını kendiniz girin. Boş bırakılırsa tek yazarlı kabul edilir ve puanınız olduğundan yüksek görünebilir.
+> - Yayının tezden üretilip üretilmediği ORCID’de yoktur. Tezden üretilen yayınlar için 3. maddeden bir bent seçin ve hesaplama sayfasında “Tezden” sütununu **E** yapın.
+
 ### Gizlilik
 
-Eser listeniz hiçbir sunucuya gönderilmez. Tüm hesaplama tarayıcınızda yapılır ve veriler yalnızca sizin tarayıcınızda saklanır. Ortak kullanılan bir bilgisayardaysanız, işiniz bitince **Listeyi temizle** düğmesini kullanın.
+Eser listeniz hiçbir sunucuya gönderilmez. Tüm hesaplama tarayıcınızda yapılır ve veriler yalnızca sizin tarayıcınızda saklanır. ORCID’den aktarma özelliğini kullanırsanız tarayıcınız ORCID numaranızla doğrudan ORCID’e (pub.orcid.org), DOI’li yayınlar için de Crossref’e (api.crossref.org) istek gönderir; bu istekler herkese açık kayıtları okur ve bu sitenin herhangi bir sunucusundan geçmez. Ortak kullanılan bir bilgisayardaysanız, işiniz bitince **Listeyi temizle** düğmesini kullanın.
 
 ------------------------------------------------------------------------
 
@@ -44,7 +63,7 @@ Eser listeniz hiçbir sunucuya gönderilmez. Tüm hesaplama tarayıcınızda yap
 ### Ayarlar sayfası
 
 | Ayar | Ne seçmeli? |
-|------------------------------------|------------------------------------|
+|----|----|
 | **Bilim alanı** | Görsel İletişim Tasarımı, İletişim Çalışmaları, Reklamcılık, Sinema veya Halkla İlişkiler alanından başvuruyorsanız alanınızı seçin; bu alanlarda 13. maddeden ek bir şart aranır. Diğer herkes **Diğer** seçer. |
 | **Yabancı uyruk / yurt dışı denklik** | Yabancı uyrukluysanız ya da yurt dışı doçentlik denkliği için başvuruyorsanız **E** seçin. |
 | **2 yıl kadrolu görev** | Doktoradan sonra yükseköğretim kurumunda en az 2 yıl kadrolu öğretim elemanı olarak çalıştıysanız **E** seçin. Bu durumda 9. maddeden 2 puan almış sayılırsınız. |
@@ -54,7 +73,7 @@ Eser listeniz hiçbir sunucuya gönderilmez. Tüm hesaplama tarayıcınızda yap
 Her eser ya da faaliyet için bir satır doldurun.
 
 | Sütun | Açıklama |
-|------------------------------------|------------------------------------|
+|----|----|
 | **Eser / Faaliyet** | Eserin kısa adı. Kendinizin tanıyacağı bir ad yeterli. Aynı eseri iki ayrı satıra yazmayın; her çalışma yalnızca bir maddede puanlanır. |
 | **Madde** | Açılır listeden seçin. Listede madde kodu ve açıklaması birlikte yer alır. Çeyreklik dilimi (Q1–Q4), danışmanlık türü ve projedeki rol de bu listede ayrı seçenekler olarak bulunur. |
 | **Doktora Sonrası (E/H)** | Eser doktora unvanını aldıktan sonra yayımlandıysa ya da faaliyet doktoradan sonra yapıldıysa **E**, önceyse **H**. Boş bırakırsanız doktora öncesi kabul edilir. |
@@ -77,7 +96,7 @@ Aynı kitap ya da toplantıdan birden fazla satır varsa, araç en yüksek puanl
 ### Sık karşılaşılan durumlar
 
 | Durum | Madde | Doktora Sonrası | Yazar | Adet | Dergi / Kitap / Toplantı |
-|------------|------------|------------|------------|------------|------------|
+|----|----|----|----|----|----|
 | Doktoradan sonra 3 yazarlı SSCI Q2 makale | 1a-Q2 | E | 3 |  | Dergi adı |
 | Tek yazarlı TR Dizin makalesi | 2a | E | 1 |  | Dergi adı |
 | Doktora tezinden üretilmiş Scopus makalesi | 3b (Tezden: E) | E | 2 |  | Dergi adı |
@@ -131,11 +150,14 @@ Yanlış hesaplandığını düşündüğünüz bir durum fark ederseniz lütfen
 ### Geliştiriciler için
 
 | Dosya | İçerik |
-|------------------------------------|------------------------------------|
+|----|----|
 | `index.html` | Sayfa ve stiller |
 | `js/kurallar.js` | Puanlar, tavanlar ve alt tavanlar. Kriterler değişince yalnızca bu dosya güncellenir. |
 | `js/hesap.js` | Hesap motoru; arayüzden bağımsızdır, Node’da da çalışır. |
 | `js/app.js` | Arayüz, Excel okuma ve yazma |
+| `orcid.html` | ORCID’den yayın aktarma sayfası (beta) |
+| `js/orcid-veri.js` | ORCID ve Crossref yanıtlarını ayrıştıran yardımcılar; Node’da da çalışır. |
+| `js/orcid-app.js` | ORCID sayfasının arayüzü; hesaplama sayfasıyla aynı tarayıcı deposunu kullanır. |
 | `sablon/` | Boş şablon ve örnek dosya |
 | `araclar/sablon_uret.py` | Şablonu `kurallar.js`’ten yeniden üretir. Node ve `openpyxl` gerekir. |
 | `test/` | Hesap motoru testleri |
@@ -144,7 +166,7 @@ Kriterler değiştiğinde izlenecek adımlar:
 
 1.  `js/kurallar.js` dosyasını güncelleyin.
 2.  Şablonu yeniden üretin: `python3 araclar/sablon_uret.py`
-3.  Testleri çalıştırın: `node --test test/hesap.test.js`
+3.  Testleri çalıştırın: `node --test test/hesap.test.js test/orcid.test.js`
 
 Zorunlu koşulların mantığı `hesap.js` içinde madde numaralarına bağlıdır. Maddelerin yapısı değişirse o bölümü de kontrol edin.
 
@@ -154,7 +176,7 @@ Aracı yerelde çalıştırmak için bir web sunucusu gerekir; `index.html` dosy
 python3 -m http.server 8000   # ardından http://localhost:8000
 ```
 
-Excel işlemleri için [SheetJS](https://sheetjs.com) (0.18.5) kullanılır.
+Excel işlemleri için [SheetJS](https://sheetjs.com) (0.18.5) kullanılır. ORCID sayfası anahtarsız erişilebilen [ORCID Public API](https://info.orcid.org/documentation/features/public-api/) ve [Crossref REST API](https://www.crossref.org/documentation/retrieve-metadata/rest-api/) kullanır.
 
 Kaynak kodu serbestçe kullanabilir, diğer temel alanlar için uyarlayabilirsiniz.
 

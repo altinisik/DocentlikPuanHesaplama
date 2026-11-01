@@ -7,6 +7,9 @@
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fmt = H.fmt;
+  const MADDESIZ = "Madde seçilmedi; bu satır madde seçilene kadar puana girmez.";
+  // Madde seçilmemiş ama içinde bilgi olan satır (ör. ORCID'den aktarılan). Yeni eklenmiş boş satır sayılmaz.
+  const maddesiz = (e) => !e.madde && !!(String(e.eserId || "").trim() || String(e.kaynak || "").trim());
 
   const SUTUNLAR = ["Eser / Faaliyet", "Madde", "Doktora Sonrası (E/H)", "Yazar / Kişi Sayısı", "Adet",
                     "Dergi / Kitap / Toplantı Adı", "Tezden Üretildi (E/H)", "Not"];
@@ -131,11 +134,13 @@
       const e = durum.eserler[i];
       const tr = tb.querySelector("tr.eser");
       const bos = !e.madde;
+      const eksikMadde = maddesiz(e);
       tb.querySelector('[data-o="puan"]').textContent = s.gecerli ? fmt(s.puan) : "–";
       tb.querySelector('[data-o="sayilan"]').textContent = s.gecerli ? fmt(s.sayilan) : "–";
       tr.classList.toggle("kirpildi", s.gecerli && s.puan - s.sayilan > 1e-9);
-      tr.classList.toggle("hatali", !bos && !s.gecerli);
-      const notlar = bos ? [] : [...new Set([...(s.notlar || []), ...(satirUyari.get(i + 1) || [])])];
+      tr.classList.toggle("hatali", (!bos && !s.gecerli) || eksikMadde);
+      const notlar = eksikMadde ? [MADDESIZ]
+        : bos ? [] : [...new Set([...(s.notlar || []), ...(satirUyari.get(i + 1) || [])])];
       const nTr = tb.querySelector("tr.notlar");
       nTr.hidden = notlar.length === 0;
       tb.querySelector('[data-o="notlar"]').textContent = notlar.join(" ");
@@ -145,15 +150,18 @@
   function kararCiz() {
     const el = $("#karar");
     const eksik = sonuc.kosullar.filter((k) => !k.gecti).length;
+    const maddesizSayi = durum.eserler.filter(maddesiz).length;
+    const ek = maddesizSayi === 1 ? " 1 satırda madde seçilmediği için bu satır hesaba girmedi."
+      : maddesizSayi > 1 ? ` ${maddesizSayi} satırda madde seçilmediği için bu satırlar hesaba girmedi.` : "";
     el.className = "karar";
     if (!durum.eserler.length) {
       el.textContent = "Eser ekledikçe puanınız ve eksik koşullarınız burada görünür.";
     } else if (sonuc.gecti) {
       el.classList.add("gecti");
-      el.textContent = `Başvuru şartlarını sağlıyorsunuz: toplam ${fmt(sonuc.toplam)}, doktora sonrası ${fmt(sonuc.doksan)} puan.`;
+      el.textContent = `Başvuru şartlarını sağlıyorsunuz: toplam ${fmt(sonuc.toplam)}, doktora sonrası ${fmt(sonuc.doksan)} puan.${ek}`;
     } else {
       el.classList.add("kaldi");
-      el.textContent = `${eksik} koşul henüz sağlanmıyor. Toplam ${fmt(sonuc.toplam)}, doktora sonrası ${fmt(sonuc.doksan)} puan.`;
+      el.textContent = `${eksik} koşul henüz sağlanmıyor. Toplam ${fmt(sonuc.toplam)}, doktora sonrası ${fmt(sonuc.doksan)} puan.${ek}`;
     }
   }
 
@@ -214,7 +222,13 @@
   }
 
   function uyarilariCiz() {
-    const liste = sonuc.uyarilar.filter((u) => u.satir == null || durum.eserler[u.satir - 1]?.madde);
+    const liste = [];
+    for (const u of sonuc.uyarilar) {
+      const e = u.satir == null ? null : durum.eserler[u.satir - 1];
+      if (!e || e.madde) liste.push(u);
+    }
+    durum.eserler.forEach((e, i) => { if (maddesiz(e)) liste.push({ satir: i + 1, mesaj: MADDESIZ }); });
+    liste.sort((a, b) => (a.satir ?? 1e9) - (b.satir ?? 1e9));
     $("#uyarilar-bolum").hidden = liste.length === 0;
     $("#uyarilar").innerHTML = liste.map((u) => `<li>${u.satir ? `<button type="button" data-git="${u.satir}">Satır ${u.satir}</button>: ` : ""}${esc(u.mesaj)}</li>`).join("");
   }
